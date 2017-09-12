@@ -26,7 +26,7 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-stream" % akkaV,
     "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
     "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion,
-    "com.typesafe.akka" %% "akka-stream-kafka" % "0.13",
+    "com.typesafe.akka" %% "akka-stream-kafka" % "0.17",
     "com.typesafe" % "config" % "1.2.1",
 
     "com.softwaremill.macwire" %% "macros" % "2.3.0" % "provided",

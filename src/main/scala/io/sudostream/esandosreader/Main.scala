@@ -31,9 +31,9 @@ object Main extends App {
     val bindingFuture = Http().bindAndHandle(httpRoutes.routes, httpInterface, httpPort)
     logger.info(s"Listening on $httpInterface:$httpPort")
 
-    bindingFuture
-      .flatMap(_.unbind()) // trigger unbinding from the port
-      .onComplete(_ => actorSystemWrapper.system.terminate()) // and shutdown when done
+//    bindingFuture
+//      .flatMap(_.unbind()) // trigger unbinding from the port
+//      .onComplete(_ => actorSystemWrapper.system.terminate()) // and shutdown when done
   }
 
 }
