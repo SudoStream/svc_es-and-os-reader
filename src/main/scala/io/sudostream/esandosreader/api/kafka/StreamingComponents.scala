@@ -1,7 +1,6 @@
 package io.sudostream.esandosreader.api.kafka
 
 import akka.actor.ActorSystem
-import akka.event.Logging
 import akka.kafka.ConsumerMessage.CommittableMessage
 import akka.kafka.scaladsl.Consumer
 import akka.kafka.scaladsl.Consumer.Control
