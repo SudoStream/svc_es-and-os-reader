@@ -5,13 +5,13 @@ import akka.event.Logging
 import akka.http.scaladsl.Http
 import com.softwaremill.macwire._
 import io.sudostream.esandosreader.api.http.HttpRoutes
-import io.sudostream.esandosreader.api.kafka.KafkaFlow
+import io.sudostream.esandosreader.api.kafka.{KafkaFlow, StreamingComponents}
 import io.sudostream.esandosreader.config.{ActorSystemWrapper, ConfigHelper}
 import io.sudostream.esandosreader.dao.{EsAndOsReaderDao, MongoDbEsAndOsReaderDao}
 
 object Main extends App {
-  //with ConfigHelper with KafkaFlow with HttpRoutes {
   lazy val configHelper: ConfigHelper = wire[ConfigHelper]
+  lazy val streamingComponents = wire[StreamingComponents]
   lazy val kafkaFlow: KafkaFlow = wire[KafkaFlow]
   lazy val httpRoutes: HttpRoutes = wire[HttpRoutes]
   lazy val esAndOsDao: EsAndOsReaderDao = new MongoDbEsAndOsReaderDao

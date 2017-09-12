@@ -20,7 +20,7 @@ class StreamingComponents(configHelper: ConfigHelper, actorSystemWrapper: ActorS
   implicit val system: ActorSystem = actorSystemWrapper.system
   implicit val executor: ExecutionContextExecutor = system.dispatcher
   implicit val materializer: Materializer = actorSystemWrapper.materializer
-  val log = Logging(system, this)
+  val log = system.log
 
   lazy val kafkaConsumerBootServers = configHelper.config.getString("akka.kafka.consumer.bootstrapservers")
   lazy val kafkaProducerBootServers = configHelper.config.getString("akka.kafka.producer.bootstrapservers")

@@ -2,12 +2,11 @@ package io.sudostream.esandosreader.api.kafka
 
 import akka.Done
 import akka.actor.ActorSystem
-import akka.event.Logging
 import akka.kafka.ProducerMessage
 import akka.kafka.scaladsl.Producer
 import akka.stream.Materializer
 import io.sudostream.esandosreader.config.ActorSystemWrapper
-import io.sudostream.esandosreader.dao.{EsAndOsReaderDao, MongoDbEsAndOsReaderDao}
+import io.sudostream.esandosreader.dao.EsAndOsReaderDao
 import io.sudostream.timetoteach.messages.scottish.ScottishEsAndOsData
 import org.apache.kafka.clients.producer.ProducerRecord
 
@@ -20,7 +19,7 @@ class KafkaFlow(streamingComponents: StreamingComponents,
   implicit val system: ActorSystem = actorSystemWrapper.system
   implicit val executor: ExecutionContextExecutor = system.dispatcher
   implicit val materializer: Materializer = actorSystemWrapper.materializer
-  val log = Logging(system, this)
+  val log = system.log
 
   def setUpKafkaFlow(): Future[Done] = {
     val source = streamingComponents.definedSource
