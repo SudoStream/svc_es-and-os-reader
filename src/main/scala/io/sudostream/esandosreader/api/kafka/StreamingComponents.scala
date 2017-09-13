@@ -8,7 +8,8 @@ import akka.kafka.{ConsumerSettings, ProducerSettings, Subscriptions}
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import io.sudostream.esandosreader.config.{ActorSystemWrapper, ConfigHelper}
-import io.sudostream.timetoteach.kafka.serializing.{GetScottishEsAndOsDataRequestDeserializer, ScottishEsAndOsDataSerializer}
+import io.sudostream.timetoteach.kafka.serializing.{GetScottishEsAndOsDataRequestDeserializer, ScottishEsAndOsDataSerializer, SystemEventSerializer}
+import io.sudostream.timetoteach.messages.events.SystemEvent
 import io.sudostream.timetoteach.messages.scottish.GetScottishEsAndOsDataRequest
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.{ByteArrayDeserializer, ByteArraySerializer}
@@ -32,15 +33,24 @@ class StreamingComponents(configHelper: ConfigHelper, actorSystemWrapper: ActorS
   val producerSettings = ProducerSettings(system, new ByteArraySerializer, new ScottishEsAndOsDataSerializer)
     .withBootstrapServers(kafkaProducerBootServers)
 
-  private[kafka] def definedSource:
+  val systemEventProducerSettings = ProducerSettings(system, new ByteArraySerializer, new SystemEventSerializer)
+    .withBootstrapServers(kafkaProducerBootServers)
+
+  def definedSource:
   Source[CommittableMessage[Array[Byte], GetScottishEsAndOsDataRequest], Control] = {
     val source_topic = configHelper.config.getString("esandos.source_topic")
     log.info(s"Source topic is '$source_topic'")
     Consumer.committableSource(consumerSettings, Subscriptions.topics(source_topic))
   }
 
-  private[kafka] def definedSink: String = {
+  def definedSink: String = {
     val sink_topic = configHelper.config.getString("esandos.sink_topic")
+    log.info(s"Sink topic is '$sink_topic'")
+    sink_topic
+  }
+
+  def definedSystemEventsTopic: String = {
+    val sink_topic = configHelper.config.getString("esandos.system_events_topic")
     log.info(s"Sink topic is '$sink_topic'")
     sink_topic
   }
