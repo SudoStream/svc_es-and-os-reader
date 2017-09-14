@@ -7,14 +7,15 @@ import com.softwaremill.macwire._
 import io.sudostream.esandosreader.api.http.HttpRoutes
 import io.sudostream.esandosreader.api.kafka.{KafkaFlow, StreamingComponents}
 import io.sudostream.esandosreader.config.{ActorSystemWrapper, ConfigHelper}
-import io.sudostream.esandosreader.dao.{EsAndOsReaderDao, MongoDbEsAndOsReaderDao}
+import io.sudostream.esandosreader.dao.{EsAndOsReaderDao, MongoDbConnectionWrapper, MongoDbConnectionWrapperImpl, MongoDbEsAndOsReaderDao}
 
 object Main extends App {
   lazy val configHelper: ConfigHelper = wire[ConfigHelper]
   lazy val streamingComponents = wire[StreamingComponents]
   lazy val kafkaFlow: KafkaFlow = wire[KafkaFlow]
   lazy val httpRoutes: HttpRoutes = wire[HttpRoutes]
-  lazy val esAndOsDao: EsAndOsReaderDao = new MongoDbEsAndOsReaderDao
+  lazy val mongoDbConnectionWrapper: MongoDbConnectionWrapper = wire[MongoDbConnectionWrapperImpl]
+  lazy val esAndOsDao: EsAndOsReaderDao = wire[MongoDbEsAndOsReaderDao]
   lazy val actorSystemWrapper: ActorSystemWrapper = wire[ActorSystemWrapper]
 
   implicit val theActorSystem: ActorSystem = actorSystemWrapper.system
@@ -31,9 +32,9 @@ object Main extends App {
     val bindingFuture = Http().bindAndHandle(httpRoutes.routes, httpInterface, httpPort)
     logger.info(s"Listening on $httpInterface:$httpPort")
 
-//    bindingFuture
-//      .flatMap(_.unbind()) // trigger unbinding from the port
-//      .onComplete(_ => actorSystemWrapper.system.terminate()) // and shutdown when done
+    //    bindingFuture
+    //      .flatMap(_.unbind()) // trigger unbinding from the port
+    //      .onComplete(_ => actorSystemWrapper.system.terminate()) // and shutdown when done
   }
 
 }

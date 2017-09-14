@@ -8,7 +8,7 @@ enablePlugins(DockerPlugin)
 name := "es-and-os-reader"
 organization := "io.sudostream"
 scalaVersion := "2.11.8"
-version := "0.0.1-4"
+version := "0.0.1-5"
 
 //docker
 dockerBaseImage := "anapsix/alpine-java:8_server-jre"
@@ -32,9 +32,11 @@ libraryDependencies ++= {
     "com.softwaremill.macwire" %% "macros" % "2.3.0" % "provided",
 
     "io.netty" % "netty-all" % "4.1.15.Final",
-    "io.argonaut" %% "argonaut" % "6.1",
     "org.mongodb.scala" %% "mongo-scala-driver" % "2.1.0",
     "ch.qos.logback" % "logback-classic" % "1.1.7",
+
+    // test
+    "org.scalamock" %% "scalamock-scalatest-support" % "3.6.0" % Test,
     scalaTest % Test
   )
 }

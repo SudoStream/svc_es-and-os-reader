@@ -14,7 +14,6 @@ import akka.util.Timeout
 import io.sudostream.esandosreader.api.kafka.StreamingComponents
 import io.sudostream.esandosreader.config.ActorSystemWrapper
 import io.sudostream.esandosreader.dao.EsAndOsReaderDao
-import io.sudostream.timetoteach.messages.scottish.ScottishEsAndOsData
 import io.sudostream.timetoteach.messages.events.SystemEvent
 import io.sudostream.timetoteach.messages.systemwide.{SystemEventType, TimeToTeachApplication}
 import org.apache.kafka.clients.producer.ProducerRecord

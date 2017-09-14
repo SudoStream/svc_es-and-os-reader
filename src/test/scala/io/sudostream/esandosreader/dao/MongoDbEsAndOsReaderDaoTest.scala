@@ -1,8 +1,31 @@
-package io.sudostream.esandosreader.api.kafka
+package io.sudostream.esandosreader.dao
 
+import com.mongodb.async.client.{FindIterable, MongoCollection => JMongoCollection}
 import io.sudostream.timetoteach.messages.scottish._
+import org.mongodb.scala.bson.BsonString
+import org.mongodb.scala.{Document, FindObservable, MongoCollection, bson}
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.FlatSpec
 
-trait TODO_MoveToTest_ExtractScottishEsAndOsData {
+class MongoDbEsAndOsReaderDaoTest extends FlatSpec with MockFactory {
+  val mongoDbConnectionWrapper: MongoDbConnectionWrapper = stub[MongoDbConnectionWrapper]
+  val esAndOsCollectionStub: JMongoCollection[Document] = stub[JMongoCollection[Document]]
+
+  // TODO: Build proper document version of this
+  val testDocument: Document = Document("Hello" -> BsonString("there"))
+  val todoEsAndOsDoc: FindObservable[Document] = FindObservable[Document](FindIterable[Document])
+
+    "Extracting All Scottish Es And Os from Dao" should "return correctly formatted documents" in {
+      // configure mongo connection behavior
+      mongoDbConnectionWrapper.getEsAndOsCollection _ when() returns esAndOsCollectionStub.asInstanceOf[MongoCollection[Document]]
+      esAndOsCollectionStub.find() when() returns todoEsAndOsDoc
+      //
+
+      val esAndOsDao: EsAndOsReaderDao = new MongoDbEsAndOsReaderDao(mongoDbConnectionWrapper)
+      val allScottishEsAndOs: ScottishEsAndOsData = esAndOsDao.extractAllScottishEsAndOs
+
+      assert(allScottishEsAndOs.allExperiencesAndOutcomes.size === stubExtractScottishEsAndOsData)
+    }
 
   def stubExtractScottishEsAndOsData: ScottishEsAndOsData = {
     val experiencesAndOutcomes: List[ScottishEsAndOsMetadata] = List(
@@ -63,4 +86,5 @@ trait TODO_MoveToTest_ExtractScottishEsAndOsData {
       allExperiencesAndOutcomes = experiencesAndOutcomes
     )
   }
+
 }

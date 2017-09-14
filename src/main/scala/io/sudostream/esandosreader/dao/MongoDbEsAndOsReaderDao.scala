@@ -1,10 +1,18 @@
 package io.sudostream.esandosreader.dao
 
-import io.sudostream.esandosreader.api.kafka.TODO_MoveToTest_ExtractScottishEsAndOsData
 import io.sudostream.timetoteach.messages.scottish.ScottishEsAndOsData
+import org.mongodb.scala.{Document, FindObservable, MongoCollection}
 
-class MongoDbEsAndOsReaderDao extends EsAndOsReaderDao with TODO_MoveToTest_ExtractScottishEsAndOsData {
+class MongoDbEsAndOsReaderDao(mongoDbConnectionWrapper: MongoDbConnectionWrapper) extends EsAndOsReaderDao {
+
+  val esAndOsCollection: MongoCollection[Document] = mongoDbConnectionWrapper.getEsAndOsCollection
+
   override def extractAllScottishEsAndOs: ScottishEsAndOsData = {
-    stubExtractScottishEsAndOsData
+    val esAndOs: FindObservable[Document] = esAndOsCollection.find(Document())
+
+
+    // TODO: Impl
+    return null
   }
+
 }

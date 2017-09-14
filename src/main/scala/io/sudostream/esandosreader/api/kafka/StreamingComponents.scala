@@ -9,7 +9,6 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import io.sudostream.esandosreader.config.{ActorSystemWrapper, ConfigHelper}
 import io.sudostream.timetoteach.kafka.serializing.{GetScottishEsAndOsDataRequestDeserializer, ScottishEsAndOsDataSerializer, SystemEventSerializer}
-import io.sudostream.timetoteach.messages.events.SystemEvent
 import io.sudostream.timetoteach.messages.scottish.GetScottishEsAndOsDataRequest
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.{ByteArrayDeserializer, ByteArraySerializer}
