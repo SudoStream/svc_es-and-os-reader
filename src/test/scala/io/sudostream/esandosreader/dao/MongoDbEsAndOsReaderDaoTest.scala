@@ -15,17 +15,19 @@ class MongoDbEsAndOsReaderDaoTest extends FlatSpec with MockFactory {
   val testDocument: Document = Document("Hello" -> BsonString("there"))
   val todoEsAndOsDoc: FindObservable[Document] = FindObservable[Document](FindIterable[Document])
 
-    "Extracting All Scottish Es And Os from Dao" should "return correctly formatted documents" in {
-      // configure mongo connection behavior
-      mongoDbConnectionWrapper.getEsAndOsCollection _ when() returns esAndOsCollectionStub.asInstanceOf[MongoCollection[Document]]
-      esAndOsCollectionStub.find() when() returns todoEsAndOsDoc
-      //
+  "Extracting All Scottish Es And Os from Dao" should "return correctly formatted documents" in {
+    // configure mongo connection behavior
+    mongoDbConnectionWrapper.getEsAndOsCollection _ when() returns esAndOsCollectionStub.asInstanceOf[MongoCollection[Document]]
+    // ( esAndOsCollectionStub.find _ ) when(Document()).returns todoEsAndOsDoc
 
-      val esAndOsDao: EsAndOsReaderDao = new MongoDbEsAndOsReaderDao(mongoDbConnectionWrapper)
-      val allScottishEsAndOs: ScottishEsAndOsData = esAndOsDao.extractAllScottishEsAndOs
 
-      assert(allScottishEsAndOs.allExperiencesAndOutcomes.size === stubExtractScottishEsAndOsData)
-    }
+    //
+
+    val esAndOsDao: EsAndOsReaderDao = new MongoDbEsAndOsReaderDao(mongoDbConnectionWrapper)
+    val allScottishEsAndOs: ScottishEsAndOsData = esAndOsDao.extractAllScottishEsAndOs
+
+    assert(allScottishEsAndOs.allExperiencesAndOutcomes.size === stubExtractScottishEsAndOsData)
+  }
 
   def stubExtractScottishEsAndOsData: ScottishEsAndOsData = {
     val experiencesAndOutcomes: List[ScottishEsAndOsMetadata] = List(
