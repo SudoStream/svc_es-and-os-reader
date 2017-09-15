@@ -5,12 +5,12 @@ import org.mongodb.scala.Document
 
 import scala.concurrent.Future
 
-class MongoDbEsAndOsReaderDao(mongoFindQueries: MongoFindQueries) extends EsAndOsReaderDao {
+class MongoDbEsAndOsReaderDao(mongoFindQueriesProxy: MongoFindQueriesProxy) extends EsAndOsReaderDao {
 
   def createScottishEsAndOsMetadata(doc: Document): ScottishEsAndOsMetadata = ???
 
   override def extractAllScottishEsAndOs: Future[ScottishEsAndOsData] = {
-    val esAndOsFutureSeqMongoDocuments: Future[Seq[Document]] = mongoFindQueries.findAllEsAndOs
+    val esAndOsFutureSeqMongoDocuments: Future[Seq[Document]] = mongoFindQueriesProxy.findAllEsAndOs
 
     // TODO: Build ScottishEsAndOsData from the Mongo Documents
     null

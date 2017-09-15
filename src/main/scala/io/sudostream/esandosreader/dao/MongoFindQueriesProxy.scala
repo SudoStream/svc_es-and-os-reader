@@ -4,6 +4,6 @@ import org.mongodb.scala.Document
 
 import scala.concurrent.Future
 
-trait MongoFindQueries {
+trait MongoFindQueriesProxy {
   def findAllEsAndOs : Future[Seq[Document]]
 }

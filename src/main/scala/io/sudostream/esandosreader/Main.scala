@@ -17,7 +17,7 @@ object Main extends App {
   lazy val mongoDbConnectionWrapper: MongoDbConnectionWrapper = wire[MongoDbConnectionWrapperImpl]
   lazy val esAndOsDao: EsAndOsReaderDao = wire[MongoDbEsAndOsReaderDao]
   lazy val actorSystemWrapper: ActorSystemWrapper = wire[ActorSystemWrapper]
-  lazy val mongoFindQueries: MongoFindQueries = wire[MongoFindQueriesImpl]
+  lazy val mongoFindQueries: MongoFindQueriesProxy = wire[MongoFindQueriesImpl]
 
 
   implicit val theActorSystem: ActorSystem = actorSystemWrapper.system

@@ -4,7 +4,7 @@ import org.mongodb.scala.{Document, FindObservable, MongoCollection}
 
 import scala.concurrent.Future
 
-class MongoFindQueriesImpl(mongoDbConnectionWrapper: MongoDbConnectionWrapper) extends MongoFindQueries {
+class MongoFindQueriesImpl(mongoDbConnectionWrapper: MongoDbConnectionWrapper) extends MongoFindQueriesProxy {
   val esAndOsCollection: MongoCollection[Document] = mongoDbConnectionWrapper.getEsAndOsCollection
 
   override def findAllEsAndOs: Future[Seq[Document]] = {

@@ -13,7 +13,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class MongoDbEsAndOsReaderDaoTest extends FlatSpec with MockitoSugar {
 
-  private val mongoFindQueries = new MongoFindQueries {
+  private val mongoFindQueries = new MongoFindQueriesProxy {
     override def findAllEsAndOs: Future[Seq[Document]] = null
   }
 
@@ -22,8 +22,8 @@ class MongoDbEsAndOsReaderDaoTest extends FlatSpec with MockitoSugar {
     val allScottishEsAndOsFuture: Future[ScottishEsAndOsData] = esAndOsDao.extractAllScottishEsAndOs
 
     allScottishEsAndOsFuture map {
-      items => Some(items)
-        assert(items.allExperiencesAndOutcomes.size === stubExtractScottishEsAndOsData.allExperiencesAndOutcomes.size)
+      esAndOsData => Some(esAndOsData)
+        assert(esAndOsData.allExperiencesAndOutcomes.size === stubExtractScottishEsAndOsData.allExperiencesAndOutcomes.size)
     } recover {
       case _ => throw new TimeoutException("Test took too long to complete")
     }
