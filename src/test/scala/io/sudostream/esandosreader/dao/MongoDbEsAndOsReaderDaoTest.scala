@@ -2,32 +2,29 @@ package io.sudostream.esandosreader.dao
 
 import java.util.concurrent.TimeoutException
 
+import io.sudostream.esandosreader.config.ActorSystemWrapper
 import io.sudostream.timetoteach.messages.scottish._
-import org.mongodb.scala.Document
 import org.scalatest.FlatSpec
 import org.scalatest.mockito.MockitoSugar
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class MongoDbEsAndOsReaderDaoTest extends FlatSpec with MockitoSugar {
-
-  private val mongoFindQueries = new MongoFindQueriesProxy {
-    override def findAllEsAndOs: Future[Seq[Document]] = null
-  }
+  private val actorSystemWrapper = new ActorSystemWrapper
+  private val mongoFindQueries = new TestMongoFindQueriesProxyStub
 
   "Extracting All Scottish Es And Os from Dao" should "return correctly formatted documents" in {
-    val esAndOsDao: EsAndOsReaderDao = new MongoDbEsAndOsReaderDao(mongoFindQueries)
+    val esAndOsDao: EsAndOsReaderDao = new MongoDbEsAndOsReaderDao(mongoFindQueries, actorSystemWrapper)
     val allScottishEsAndOsFuture: Future[ScottishEsAndOsData] = esAndOsDao.extractAllScottishEsAndOs
 
     allScottishEsAndOsFuture map {
-      esAndOsData => Some(esAndOsData)
+      esAndOsData: ScottishEsAndOsData =>
         assert(esAndOsData.allExperiencesAndOutcomes.size === stubExtractScottishEsAndOsData.allExperiencesAndOutcomes.size)
     } recover {
       case _ => throw new TimeoutException("Test took too long to complete")
     }
-
     Await.result(allScottishEsAndOsFuture, 5.seconds)
   }
 
