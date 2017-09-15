@@ -2,15 +2,16 @@ package io.sudostream.esandosreader.api.kafka
 
 import akka.Done
 import akka.actor.ActorSystem
-import akka.kafka.ProducerMessage
-import akka.kafka.scaladsl.Producer
+import akka.kafka.{ConsumerMessage, ProducerMessage}
+import akka.kafka.scaladsl.{Consumer, Producer}
 import akka.stream.Materializer
+import akka.stream.scaladsl.Source
 import io.sudostream.esandosreader.config.ActorSystemWrapper
 import io.sudostream.esandosreader.dao.EsAndOsReaderDao
 import io.sudostream.timetoteach.messages.scottish.ScottishEsAndOsData
 import org.apache.kafka.clients.producer.ProducerRecord
 
-import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
 class KafkaFlow(streamingComponents: StreamingComponents,
                 dao: EsAndOsReaderDao,
@@ -22,18 +23,26 @@ class KafkaFlow(streamingComponents: StreamingComponents,
   val log = system.log
 
   def setUpKafkaFlow(): Future[Done] = {
+
+
     val source = streamingComponents.definedSource
-    source.map {
+
+    val flow1 = source.map {
       msg =>
         val getRequestMsg = msg.record.value()
         log.info(s"Received request '$getRequestMsg'")
-
-        val scottishEsAndOsData = dao.extractAllScottishEsAndOs
-
-        ProducerMessage.Message(
-          new ProducerRecord[Array[Byte], ScottishEsAndOsData]
-          (streamingComponents.definedSink, scottishEsAndOsData), msg.committableOffset)
-    }.runWith(Producer.commitableSink(streamingComponents.producerSettings))
+        getRequestMsg
+    }.mapAsync(1) { msg =>
+      dao.extractAllScottishEsAndOs
+    }.map {
+      data =>
+      ProducerMessage.Message(
+        new ProducerRecord[Array[Byte], ScottishEsAndOsData]
+        (streamingComponents.definedSink, data), msg.committableOffset)
+    }
   }
+
+  flow.runWith(Producer.commitableSink(streamingComponents.producerSettings))
+}
 
 }

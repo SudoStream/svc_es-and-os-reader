@@ -1,33 +1,34 @@
 package io.sudostream.esandosreader.dao
 
-import com.mongodb.async.client.{FindIterable, MongoCollection => JMongoCollection}
+//import com.mongodb.async.client.{FindIterable, MongoCollection => JMongoCollection}
+import com.mongodb.async.client.FindIterable
 import io.sudostream.timetoteach.messages.scottish._
+import org.mockito.Mockito._
 import org.mongodb.scala.bson.BsonString
-import org.mongodb.scala.{Document, FindObservable, MongoCollection, bson}
-import org.scalamock.scalatest.MockFactory
+import org.mongodb.scala.{Document, FindObservable, MongoCollection}
 import org.scalatest.FlatSpec
+import org.scalatest.mockito.MockitoSugar
 
-class MongoDbEsAndOsReaderDaoTest extends FlatSpec with MockFactory {
-  val mongoDbConnectionWrapper: MongoDbConnectionWrapper = stub[MongoDbConnectionWrapper]
-  val esAndOsCollectionStub: JMongoCollection[Document] = stub[JMongoCollection[Document]]
-
+class MongoDbEsAndOsReaderDaoTest extends FlatSpec with MockitoSugar {
+  val mongoDbConnectionWrapper: MongoDbConnectionWrapper = mock[MongoDbConnectionWrapper]
+  val esAndOsCollectionStub: MongoCollection[Document] = mock[MongoCollection[Document]]
   // TODO: Build proper document version of this
-  val testDocument: Document = Document("Hello" -> BsonString("there"))
-  val todoEsAndOsDoc: FindObservable[Document] = FindObservable[Document](FindIterable[Document])
+  val testMongoFilterDocument: Document = Document("Hello" -> BsonString("there"))
+//  val findIterable: FindIterable[Document] = mock[FindIterable[Document]]
+  val esAndOsDocObservable: FindObservable[Document] = mock[FindObservable[Document]]
+
 
   "Extracting All Scottish Es And Os from Dao" should "return correctly formatted documents" in {
-    // configure mongo connection behavior
-    mongoDbConnectionWrapper.getEsAndOsCollection _ when() returns esAndOsCollectionStub.asInstanceOf[MongoCollection[Document]]
-    // ( esAndOsCollectionStub.find _ ) when(Document()).returns todoEsAndOsDoc
-
-
+    // configure behavior
+    when(mongoDbConnectionWrapper.getEsAndOsCollection).thenReturn(esAndOsCollectionStub)
+    when(esAndOsCollectionStub.find()).thenReturn(esAndOsDocObservable)
     //
 
     val esAndOsDao: EsAndOsReaderDao = new MongoDbEsAndOsReaderDao(mongoDbConnectionWrapper)
     val allScottishEsAndOs: ScottishEsAndOsData = esAndOsDao.extractAllScottishEsAndOs
-
-    assert(allScottishEsAndOs.allExperiencesAndOutcomes.size === stubExtractScottishEsAndOsData)
+    assert(allScottishEsAndOs.allExperiencesAndOutcomes.size === stubExtractScottishEsAndOsData.allExperiencesAndOutcomes.size)
   }
+
 
   def stubExtractScottishEsAndOsData: ScottishEsAndOsData = {
     val experiencesAndOutcomes: List[ScottishEsAndOsMetadata] = List(

@@ -36,7 +36,8 @@ libraryDependencies ++= {
     "ch.qos.logback" % "logback-classic" % "1.1.7",
 
     // test
-    "org.scalamock" %% "scalamock-scalatest-support" % "3.6.0" % Test,
+//    "org.scalamock" %% "scalamock-scalatest-support" % "3.6.0" % Test,
+    "org.mockito" % "mockito-all" % "1.10.19" % "test",
     scalaTest % Test
   )
 }

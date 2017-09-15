@@ -1,18 +1,18 @@
 package io.sudostream.esandosreader.dao
 
-import io.sudostream.timetoteach.messages.scottish.ScottishEsAndOsData
-import org.mongodb.scala.{Document, FindObservable, MongoCollection}
+import io.sudostream.timetoteach.messages.scottish.{ScottishEsAndOsData, ScottishEsAndOsMetadata}
+import org.mongodb.scala.Document
 
-class MongoDbEsAndOsReaderDao(mongoDbConnectionWrapper: MongoDbConnectionWrapper) extends EsAndOsReaderDao {
+import scala.concurrent.Future
 
-  val esAndOsCollection: MongoCollection[Document] = mongoDbConnectionWrapper.getEsAndOsCollection
+class MongoDbEsAndOsReaderDao(mongoFindQueries: MongoFindQueries) extends EsAndOsReaderDao {
 
-  override def extractAllScottishEsAndOs: ScottishEsAndOsData = {
-    val esAndOs: FindObservable[Document] = esAndOsCollection.find(Document())
+  def createScottishEsAndOsMetadata(doc: Document): ScottishEsAndOsMetadata = ???
 
+  override def extractAllScottishEsAndOs: Future[ScottishEsAndOsData] = {
+    val esAndOsFutureSeqMongoDocuments: Future[Seq[Document]] = mongoFindQueries.findAllEsAndOs
 
-    // TODO: Impl
-    return null
+    // TODO: Build ScottishEsAndOsData from the Mongo Documents
   }
 
 }
