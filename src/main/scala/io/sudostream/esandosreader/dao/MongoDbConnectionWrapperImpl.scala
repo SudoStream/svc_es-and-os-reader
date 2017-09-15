@@ -32,6 +32,8 @@ sealed class MongoDbConnectionWrapperImpl(actorSystemWrapper: ActorSystemWrapper
     case e: Exception => false
   }
 
+  log.info(s"Running Local = $isLocalMongoDb")
+
   def getEsAndOsCollection: MongoCollection[Document] = {
     def createMongoClient: MongoClient = {
       if (isLocalMongoDb) {
@@ -59,8 +61,8 @@ sealed class MongoDbConnectionWrapperImpl(actorSystemWrapper: ActorSystemWrapper
     System.setProperty("javax.net.ssl.trustStore", "/etc/ssl/cacerts")
     System.setProperty("javax.net.ssl.trustStorePassword", mongoKeystorePassword)
 
-    val mongoDbHost = config.getString("mongodb.host")
-    val mongoDbPort = config.getInt("mongodb.port")
+    val mongoDbHost = mongoDbUri.getHost
+    val mongoDbPort = mongoDbUri.getPort
     println(s"mongo host = '$mongoDbHost'")
     println(s"mongo port = '$mongoDbPort'")
 
