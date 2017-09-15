@@ -38,12 +38,13 @@ class HttpRoutes(dao: EsAndOsReaderDao,
       val initialRequestReceived = Instant.now().toEpochMilli
       log.debug("Called 'api/esandos' and now getting All the E's and O's from the DAO")
 
-      val scottishEsAndOsData = dao.extractAllScottishEsAndOs
-      log.info(s"Received all ${scottishEsAndOsData.allExperiencesAndOutcomes.size} E's and O's from the DAO")
+      val scottishEsAndOsDataFuture = dao.extractAllScottishEsAndOs
 
-      Source(List(scottishEsAndOsData))
+      Source.fromFuture(scottishEsAndOsDataFuture)
         .map {
           elem =>
+            log.info(s"Received all ${elem.allExperiencesAndOutcomes.size} E's and O's from the DAO")
+
             SystemEvent(
               eventType = SystemEventType.SCOTTISH_ES_AND_OS_REQUESTED_EVENT,
               requestFingerprint = UUID.randomUUID().toString,
@@ -61,7 +62,7 @@ class HttpRoutes(dao: EsAndOsReaderDao,
         }
         .runWith(Producer.plainSink(streamingComponents.systemEventProducerSettings))
 
-      complete(HttpEntity(ContentTypes.`application/json`, scottishEsAndOsData.toString))
+      complete(HttpEntity(ContentTypes.`application/json`, scottishEsAndOsDataFuture.toString))
     }
   } ~ health
 

@@ -1,32 +1,34 @@
 package io.sudostream.esandosreader.dao
 
-//import com.mongodb.async.client.{FindIterable, MongoCollection => JMongoCollection}
-import com.mongodb.async.client.FindIterable
+import java.util.concurrent.TimeoutException
+
 import io.sudostream.timetoteach.messages.scottish._
-import org.mockito.Mockito._
-import org.mongodb.scala.bson.BsonString
-import org.mongodb.scala.{Document, FindObservable, MongoCollection}
+import org.mongodb.scala.Document
 import org.scalatest.FlatSpec
 import org.scalatest.mockito.MockitoSugar
 
-class MongoDbEsAndOsReaderDaoTest extends FlatSpec with MockitoSugar {
-  val mongoDbConnectionWrapper: MongoDbConnectionWrapper = mock[MongoDbConnectionWrapper]
-  val esAndOsCollectionStub: MongoCollection[Document] = mock[MongoCollection[Document]]
-  // TODO: Build proper document version of this
-  val testMongoFilterDocument: Document = Document("Hello" -> BsonString("there"))
-//  val findIterable: FindIterable[Document] = mock[FindIterable[Document]]
-  val esAndOsDocObservable: FindObservable[Document] = mock[FindObservable[Document]]
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
 
+class MongoDbEsAndOsReaderDaoTest extends FlatSpec with MockitoSugar {
+
+  private val mongoFindQueries = new MongoFindQueries {
+    override def findAllEsAndOs: Future[Seq[Document]] = null
+  }
 
   "Extracting All Scottish Es And Os from Dao" should "return correctly formatted documents" in {
-    // configure behavior
-    when(mongoDbConnectionWrapper.getEsAndOsCollection).thenReturn(esAndOsCollectionStub)
-    when(esAndOsCollectionStub.find()).thenReturn(esAndOsDocObservable)
-    //
+    val esAndOsDao: EsAndOsReaderDao = new MongoDbEsAndOsReaderDao(mongoFindQueries)
+    val allScottishEsAndOsFuture: Future[ScottishEsAndOsData] = esAndOsDao.extractAllScottishEsAndOs
 
-    val esAndOsDao: EsAndOsReaderDao = new MongoDbEsAndOsReaderDao(mongoDbConnectionWrapper)
-    val allScottishEsAndOs: ScottishEsAndOsData = esAndOsDao.extractAllScottishEsAndOs
-    assert(allScottishEsAndOs.allExperiencesAndOutcomes.size === stubExtractScottishEsAndOsData.allExperiencesAndOutcomes.size)
+    allScottishEsAndOsFuture map {
+      items => Some(items)
+        assert(items.allExperiencesAndOutcomes.size === stubExtractScottishEsAndOsData.allExperiencesAndOutcomes.size)
+    } recover {
+      case _ => throw new TimeoutException("Test took too long to complete")
+    }
+
+    Await.result(allScottishEsAndOsFuture, 5.seconds)
   }
 
 

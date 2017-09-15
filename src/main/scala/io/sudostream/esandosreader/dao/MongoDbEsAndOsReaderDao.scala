@@ -13,6 +13,7 @@ class MongoDbEsAndOsReaderDao(mongoFindQueries: MongoFindQueries) extends EsAndO
     val esAndOsFutureSeqMongoDocuments: Future[Seq[Document]] = mongoFindQueries.findAllEsAndOs
 
     // TODO: Build ScottishEsAndOsData from the Mongo Documents
+    null
   }
 
 }
