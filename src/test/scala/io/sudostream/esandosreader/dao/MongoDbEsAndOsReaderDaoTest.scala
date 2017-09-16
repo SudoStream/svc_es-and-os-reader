@@ -10,8 +10,9 @@ import org.scalatest.mockito.MockitoSugar
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
+import org.scalatest.AsyncFlatSpec
 
-class MongoDbEsAndOsReaderDaoTest extends FlatSpec with MockitoSugar {
+class MongoDbEsAndOsReaderDaoTest extends AsyncFlatSpec with MockitoSugar {
   private val actorSystemWrapper = new ActorSystemWrapper
   private val mongoFindQueries = new TestMongoFindQueriesProxyStub
 
@@ -21,11 +22,10 @@ class MongoDbEsAndOsReaderDaoTest extends FlatSpec with MockitoSugar {
 
     allScottishEsAndOsFuture map {
       esAndOsData: ScottishEsAndOsData =>
-        assert(esAndOsData.allExperiencesAndOutcomes.size === stubExtractScottishEsAndOsData.allExperiencesAndOutcomes.size)
-    } recover {
-      case _ => throw new TimeoutException("Test took too long to complete")
+        val esAndOs = stubExtractScottishEsAndOsData.allExperiencesAndOutcomes
+        println(s"Es and Os created looks like : ${esAndOs.toString}")
+        assert(esAndOsData.allExperiencesAndOutcomes.size === esAndOs.size)
     }
-    Await.result(allScottishEsAndOsFuture, 5.seconds)
   }
 
 
