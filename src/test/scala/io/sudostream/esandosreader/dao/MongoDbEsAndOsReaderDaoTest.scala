@@ -1,16 +1,12 @@
 package io.sudostream.esandosreader.dao
 
-import java.util.concurrent.TimeoutException
-
 import io.sudostream.esandosreader.config.ActorSystemWrapper
 import io.sudostream.timetoteach.messages.scottish._
-import org.scalatest.FlatSpec
+import org.scalatest.AsyncFlatSpec
 import org.scalatest.mockito.MockitoSugar
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
-import org.scalatest.AsyncFlatSpec
+import scala.concurrent.Future
 
 class MongoDbEsAndOsReaderDaoTest extends AsyncFlatSpec with MockitoSugar {
   private val actorSystemWrapper = new ActorSystemWrapper
