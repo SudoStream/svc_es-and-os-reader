@@ -8,6 +8,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.kafka.scaladsl.Producer
+import akka.parboiled2.RuleTrace.Fail
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import akka.util.Timeout
@@ -20,6 +21,7 @@ import org.apache.kafka.clients.producer.ProducerRecord
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 class HttpRoutes(dao: EsAndOsReaderDao,
                  actorSystemWrapper: ActorSystemWrapper,
@@ -62,7 +64,12 @@ class HttpRoutes(dao: EsAndOsReaderDao,
         }
         .runWith(Producer.plainSink(streamingComponents.systemEventProducerSettings))
 
-      complete(HttpEntity(ContentTypes.`application/json`, scottishEsAndOsDataFuture.toString))
+      onComplete(scottishEsAndOsDataFuture) {
+        case Success(esAndOsData) =>
+          complete(HttpEntity(ContentTypes.`application/json`, esAndOsData.toString))
+        case Failure(ex) => failWith(ex)
+      }
+
     }
   } ~ health
 

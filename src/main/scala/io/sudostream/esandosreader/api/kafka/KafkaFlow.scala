@@ -18,7 +18,7 @@ import io.sudostream.timetoteach.messages.scottish.{GetScottishEsAndOsDataReques
 import io.sudostream.timetoteach.messages.systemwide.SystemEventType
 import org.apache.kafka.clients.producer.ProducerRecord
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 class KafkaFlow(streamingComponents: StreamingComponents,
                 dao: EsAndOsReaderDao,
@@ -37,9 +37,8 @@ class KafkaFlow(streamingComponents: StreamingComponents,
         streamingComponents.definedSource
 
       val broadcastGetScottishEsAndOsDataRequestMessage =
-        builder.add(Broadcast[CommittableMessage[Array[Byte], GetScottishEsAndOsDataRequest]](2))
+        builder.add(Broadcast[CommittableMessage[Array[Byte], GetScottishEsAndOsDataRequest]](3))
 
-      val sourceEsAndOsFromDatabase = Source.fromFuture(dao.extractAllScottishEsAndOs)
       val zip = builder.add(ZipWith((msg: CommittableMessage[Array[Byte], GetScottishEsAndOsDataRequest],
                                      esAndOs: ScottishEsAndOsData) => (msg, esAndOs)))
 
@@ -47,13 +46,18 @@ class KafkaFlow(streamingComponents: StreamingComponents,
       val sinkSystemEventTopic = Producer.plainSink(streamingComponents.systemEventProducerSettings)
 
       // Graph - Start ========================================================================================
+      //@formatter:off
       // MainLine
       sourceMessages ~> broadcastGetScottishEsAndOsDataRequestMessage ~> flowLogEsAndOsRequest ~> zip.in0
-      sourceEsAndOsFromDatabase ~> zip.in1
+                        broadcastGetScottishEsAndOsDataRequestMessage ~>
+                          flowGetEsAndOsFromDatabase ~> flowEsAndOsAsyncBoundary ~> zip.in1
+
       zip.out ~> createProducerRecordForKafka ~> sinkScottishEsAndOsTopic
 
-      // Side Line
-      broadcastGetScottishEsAndOsDataRequestMessage ~> createSystemEventFromIncomingMessage ~> sinkSystemEventTopic
+                        // Side Line
+                        broadcastGetScottishEsAndOsDataRequestMessage ~>
+                          createSystemEventFromIncomingMessage ~> sinkSystemEventTopic
+      // @formatter:on
       // Graph - End ==========================================================================================
 
       ClosedShape
@@ -61,6 +65,22 @@ class KafkaFlow(streamingComponents: StreamingComponents,
 
     runnableGraph.run()
   }
+
+  private[kafka] def flowEsAndOsAsyncBoundary = {
+    Flow[Future[ScottishEsAndOsData]]
+      .mapAsync(1) {
+        flowElement => flowElement
+      }
+  }
+
+
+  private[kafka] def flowGetEsAndOsFromDatabase = {
+    Flow[CommittableMessage[Array[Byte], GetScottishEsAndOsDataRequest]]
+      .map {
+        msg => dao.extractAllScottishEsAndOs
+      }
+  }
+
 
   private[kafka] def createSystemEventFromIncomingMessage = {
     Flow[CommittableMessage[Array[Byte], GetScottishEsAndOsDataRequest]]
