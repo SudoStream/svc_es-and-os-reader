@@ -1,5 +1,6 @@
 import Dependencies._
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{dockerRepository, dockerUpdateLatest}
+import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
 
 enablePlugins(JavaAppPackaging)
 enablePlugins(UniversalPlugin)
@@ -8,13 +9,23 @@ enablePlugins(DockerPlugin)
 name := "es-and-os-reader"
 organization := "io.sudostream"
 scalaVersion := "2.11.8"
-version := "0.0.1-8"
+version := "0.0.1-10"
 
 //docker
 dockerBaseImage := "anapsix/alpine-java:8_server-jre"
 dockerRepository := Some("eu.gcr.io/time-to-teach")
 dockerUpdateLatest := true
 packageName in Docker := "es-and-os-reader"
+
+dockerCommands ++= Seq(
+  // setting the run script executable
+  ExecCmd("RUN",
+    "chmod", "u+x",
+//    s"${(defaultLinuxInstallLocation in Docker).value}/bin/${executableScriptName.value}"),
+    s"bin/${executableScriptName.value}"),
+  // setting a daemon user
+  Cmd("USER", "daemon")
+)
 
 libraryDependencies ++= {
   val akkaV = "2.5.4"
