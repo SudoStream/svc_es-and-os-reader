@@ -1,11 +1,10 @@
 package io.sudostream.esandosreader.dao
 
-import io.sudostream.timetoteach.messages.scottish.{ScottishCurriculumAreaName, ScottishCurriculumLevel, ScottishEsAndOsMetadata, ScottishExperienceAndOutcome}
 import org.mongodb.scala.Document
-import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonNull, BsonString}
+import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonString}
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class TestMongoFindQueriesProxyStub extends MongoFindQueriesProxy {
 
