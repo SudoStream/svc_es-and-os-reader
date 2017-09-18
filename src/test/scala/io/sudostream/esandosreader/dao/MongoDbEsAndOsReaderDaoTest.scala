@@ -10,7 +10,8 @@ import scala.concurrent.Future
 
 class MongoDbEsAndOsReaderDaoTest extends AsyncFlatSpec with MockitoSugar {
   private val actorSystemWrapper = new ActorSystemWrapper
-  private val mongoFindQueries = new TestMongoFindQueriesProxyStub
+  private val mongoFindQueries = new MongoFindQueriesProxyStub
+  private val mongoFindQueriesWithError = new MongoFindQueriesProxyStubWithError
 
   "Extracting All Scottish Es And Os from Dao" should "return correctly formatted documents" in {
     val esAndOsDao: EsAndOsReaderDao = new MongoDbEsAndOsReaderDao(mongoFindQueries, actorSystemWrapper)
@@ -22,7 +23,25 @@ class MongoDbEsAndOsReaderDaoTest extends AsyncFlatSpec with MockitoSugar {
         println(s"Es and Os created looks like : ${esAndOs.toString}")
         assert(esAndOsData.allExperiencesAndOutcomes.size === esAndOs.size)
     }
+
   }
+
+  // TODO: Fix the code such that the following test fails rather than spins
+//  "Extracting All Scottish Es And Os from Dao with error" should "be reported clearly" in {
+//      val esAndOsDao: EsAndOsReaderDao = new MongoDbEsAndOsReaderDao(mongoFindQueriesWithError, actorSystemWrapper)
+//      val allScottishEsAndOsFuture: Future[ScottishEsAndOsData] = esAndOsDao.extractAllScottishEsAndOs
+//
+//      allScottishEsAndOsFuture onFailure {
+//        case ex => println(s"OOOOHH DEAR: $ex")
+//      }
+//
+//      allScottishEsAndOsFuture map {
+//        esAndOsData: ScottishEsAndOsData =>
+//          val esAndOs = stubExtractScottishEsAndOsData.allExperiencesAndOutcomes
+//          println(s"Es and Os created looks like : ${esAndOs.toString}")
+//          assert(esAndOsData.allExperiencesAndOutcomes.size === esAndOs.size)
+//      }
+//  }
 
 
   def stubExtractScottishEsAndOsData: ScottishEsAndOsData = {

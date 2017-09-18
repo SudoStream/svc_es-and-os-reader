@@ -6,7 +6,7 @@ import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonString}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class TestMongoFindQueriesProxyStub extends MongoFindQueriesProxy {
+class MongoFindQueriesProxyStub extends MongoFindQueriesProxy {
 
   override def findAllEsAndOs: Future[Seq[Document]] = {
     val esAndOs1 = Document(

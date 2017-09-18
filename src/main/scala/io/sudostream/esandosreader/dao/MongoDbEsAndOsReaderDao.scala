@@ -22,7 +22,6 @@ class MongoDbEsAndOsReaderDao(mongoFindQueriesProxy: MongoFindQueriesProxy,
 
   override def extractAllScottishEsAndOs: Future[ScottishEsAndOsData] = {
     val esAndOsFutureSeqMongoDocuments: Future[Seq[Document]] = mongoFindQueriesProxy.findAllEsAndOs
-
     esAndOsFutureSeqMongoDocuments map {
       esAndOs =>
         val seqOfScottishEsAndOsMetadata: Seq[Try[ScottishEsAndOsMetadata]] =
