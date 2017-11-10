@@ -8,7 +8,6 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.kafka.scaladsl.Producer
-import akka.parboiled2.RuleTrace.Fail
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import akka.util.Timeout

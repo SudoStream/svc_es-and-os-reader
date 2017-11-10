@@ -25,6 +25,7 @@ sealed class MongoDbConnectionWrapperImpl(actorSystemWrapper: ActorSystemWrapper
   private val mongoDbUriString = config.getString("mongodb.connection_uri")
   private val mongoDbUri = new URI(mongoDbUriString)
   private val esAndOsDatabaseName = config.getString("esandos.database_name")
+  private val esAndOsCollectionName = config.getString("esandos.collection_name")
 
   private val isLocalMongoDb: Boolean = try {
     if (sys.env("LOCAL_MONGO_DB") == "true") true else false
@@ -46,8 +47,8 @@ sealed class MongoDbConnectionWrapperImpl(actorSystemWrapper: ActorSystemWrapper
     }
 
     val mongoClient = createMongoClient
-    val database: MongoDatabase = mongoClient.getDatabase("esandos")
-    database.getCollection(esAndOsDatabaseName)
+    val database: MongoDatabase = mongoClient.getDatabase(esAndOsDatabaseName)
+    database.getCollection(esAndOsCollectionName)
   }
 
   private def buildLocalMongoDbClient = {
@@ -57,9 +58,9 @@ sealed class MongoDbConnectionWrapperImpl(actorSystemWrapper: ActorSystemWrapper
       case e: Exception => ""
     }
     System.setProperty("javax.net.ssl.keyStore", "/etc/ssl/cacerts")
-    System.setProperty("javax.net.ssl.keyStorePassword", mongoKeystorePassword)
+//    System.setProperty("javax.net.ssl.keyStorePassword", mongoKeystorePassword)
     System.setProperty("javax.net.ssl.trustStore", "/etc/ssl/cacerts")
-    System.setProperty("javax.net.ssl.trustStorePassword", mongoKeystorePassword)
+//    System.setProperty("javax.net.ssl.trustStorePassword", mongoKeystorePassword)
 
     val mongoDbHost = mongoDbUri.getHost
     val mongoDbPort = mongoDbUri.getPort
@@ -77,6 +78,8 @@ sealed class MongoDbConnectionWrapperImpl(actorSystemWrapper: ActorSystemWrapper
       .streamFactoryFactory(NettyStreamFactoryFactory())
       .clusterSettings(clusterSettings)
       .build()
+
+    println(sys.env.foreach(println(_)))
 
     MongoClient(mongoSslClientSettings)
   }

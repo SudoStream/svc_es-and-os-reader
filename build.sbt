@@ -31,7 +31,7 @@ libraryDependencies ++= {
   val akkaV = "2.5.4"
   val akkaHttpVersion = "10.0.10"
   Seq(
-    "io.sudostream.timetoteach" %% "messages" % "0.0.11-5",
+    "io.sudostream.timetoteach" %% "messages" % "0.0.11-15",
 
     "com.typesafe.akka" %% "akka-actor" % akkaV,
     "com.typesafe.akka" %% "akka-stream" % akkaV,
@@ -54,10 +54,10 @@ libraryDependencies ++= {
 
 fork in run := true
 
-javaOptions in run ++= Seq(
-  "-Djavax.net.ssl.keyStore=/etc/ssl/cacerts",
-  "-Djavax.net.ssl.keyStorePassword=the8balL",
-  "-Djavax.net.ssl.trustStore=/etc/ssl/cacerts",
-  "-Djavax.net.ssl.trustStorePassword=the8balL"
-)
+//javaOptions in run ++= Seq(
+//  "-Djavax.net.ssl.keyStore=/etc/ssl/cacerts",
+//  "-Djavax.net.ssl.keyStorePassword=the8balL",
+//  "-Djavax.net.ssl.trustStore=/etc/ssl/cacerts",
+//  "-Djavax.net.ssl.trustStorePassword=the8balL"
+//)
 
