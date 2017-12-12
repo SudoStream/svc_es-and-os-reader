@@ -7,6 +7,7 @@ import akka.event.LoggingAdapter
 import akka.stream.Materializer
 import com.mongodb.connection.ClusterSettings
 import com.typesafe.config.ConfigFactory
+import io.sudostream.esandosreader.Main
 import io.sudostream.esandosreader.config.ActorSystemWrapper
 import org.mongodb.scala.connection.{NettyStreamFactoryFactory, SslSettings}
 import org.mongodb.scala.{Document, MongoClient, MongoClientSettings, MongoCollection, MongoDatabase, ServerAddress}
@@ -37,7 +38,7 @@ sealed class MongoDbConnectionWrapperImpl(actorSystemWrapper: ActorSystemWrapper
 
   def getEsAndOsCollection: MongoCollection[Document] = {
     def createMongoClient: MongoClient = {
-      if (isLocalMongoDb) {
+      if (isLocalMongoDb || Main.isMinikubeRun) {
         buildLocalMongoDbClient
       } else {
         log.info(s"connecting to mongo db at '${mongoDbUri.getHost}:${mongoDbUri.getPort}'")
@@ -58,9 +59,9 @@ sealed class MongoDbConnectionWrapperImpl(actorSystemWrapper: ActorSystemWrapper
       case e: Exception => ""
     }
     System.setProperty("javax.net.ssl.keyStore", "/etc/ssl/cacerts")
-//    System.setProperty("javax.net.ssl.keyStorePassword", mongoKeystorePassword)
+    //    System.setProperty("javax.net.ssl.keyStorePassword", mongoKeystorePassword)
     System.setProperty("javax.net.ssl.trustStore", "/etc/ssl/cacerts")
-//    System.setProperty("javax.net.ssl.trustStorePassword", mongoKeystorePassword)
+    //    System.setProperty("javax.net.ssl.trustStorePassword", mongoKeystorePassword)
 
     val mongoDbHost = mongoDbUri.getHost
     val mongoDbPort = mongoDbUri.getPort
