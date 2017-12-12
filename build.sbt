@@ -9,7 +9,7 @@ enablePlugins(DockerPlugin)
 name := "es-and-os-reader"
 organization := "io.sudostream"
 scalaVersion := "2.11.8"
-version := "0.0.1-12"
+version := "0.0.1-13"
 
 //docker
 dockerBaseImage := "anapsix/alpine-java:8_server-jre"

@@ -5,6 +5,7 @@ import akka.event.LoggingAdapter
 import akka.stream.Materializer
 import io.sudostream.esandosreader.config.ActorSystemWrapper
 import io.sudostream.timetoteach.messages.scottish._
+import io.sudostream.timetoteach.messages.systemwide.model.ScottishCurriculumLevelWrapper
 import org.mongodb.scala.Document
 import org.mongodb.scala.bson.{BsonArray, BsonString}
 
@@ -119,7 +120,7 @@ class MongoDbEsAndOsReaderDao(mongoFindQueriesProxy: MongoFindQueriesProxy,
             log.error(errorMsg)
             throw new RuntimeException(errorMsg)
           }
-        } yield level
+        } yield ScottishCurriculumLevelWrapper(level)
 
       val theCurriculumAreaNameAsString = esAndOsDocument.getString("curriculumAreaName")
       val theCurriculumAreaName: ScottishCurriculumAreaName =
