@@ -2,6 +2,7 @@ package io.sudostream.esandosreader.dao
 
 import io.sudostream.esandosreader.config.ActorSystemWrapper
 import io.sudostream.timetoteach.messages.scottish._
+import io.sudostream.timetoteach.messages.systemwide.model.ScottishCurriculumLevelWrapper
 import org.scalatest.AsyncFlatSpec
 import org.scalatest.mockito.MockitoSugar
 
@@ -27,21 +28,21 @@ class MongoDbEsAndOsReaderDaoTest extends AsyncFlatSpec with MockitoSugar {
   }
 
   // TODO: Fix the code such that the following test fails rather than spins
-//  "Extracting All Scottish Es And Os from Dao with error" should "be reported clearly" in {
-//      val esAndOsDao: EsAndOsReaderDao = new MongoDbEsAndOsReaderDao(mongoFindQueriesWithError, actorSystemWrapper)
-//      val allScottishEsAndOsFuture: Future[ScottishEsAndOsData] = esAndOsDao.extractAllScottishEsAndOs
-//
-//      allScottishEsAndOsFuture onFailure {
-//        case ex => println(s"OOOOHH DEAR: $ex")
-//      }
-//
-//      allScottishEsAndOsFuture map {
-//        esAndOsData: ScottishEsAndOsData =>
-//          val esAndOs = stubExtractScottishEsAndOsData.allExperiencesAndOutcomes
-//          println(s"Es and Os created looks like : ${esAndOs.toString}")
-//          assert(esAndOsData.allExperiencesAndOutcomes.size === esAndOs.size)
-//      }
-//  }
+  //  "Extracting All Scottish Es And Os from Dao with error" should "be reported clearly" in {
+  //      val esAndOsDao: EsAndOsReaderDao = new MongoDbEsAndOsReaderDao(mongoFindQueriesWithError, actorSystemWrapper)
+  //      val allScottishEsAndOsFuture: Future[ScottishEsAndOsData] = esAndOsDao.extractAllScottishEsAndOs
+  //
+  //      allScottishEsAndOsFuture onFailure {
+  //        case ex => println(s"OOOOHH DEAR: $ex")
+  //      }
+  //
+  //      allScottishEsAndOsFuture map {
+  //        esAndOsData: ScottishEsAndOsData =>
+  //          val esAndOs = stubExtractScottishEsAndOsData.allExperiencesAndOutcomes
+  //          println(s"Es and Os created looks like : ${esAndOs.toString}")
+  //          assert(esAndOsData.allExperiencesAndOutcomes.size === esAndOs.size)
+  //      }
+  //  }
 
 
   def stubExtractScottishEsAndOsData: ScottishEsAndOsData = {
@@ -55,7 +56,10 @@ class MongoDbEsAndOsReaderDaoTest extends AsyncFlatSpec with MockitoSugar {
           )
         ),
         codes = List("EXA 0-01a", "EXA 1-01a", "EXA 2-01a"),
-        curriculumLevels = List(ScottishCurriculumLevel.EARLY, ScottishCurriculumLevel.FIRST, ScottishCurriculumLevel.SECOND),
+        curriculumLevels = List(
+          ScottishCurriculumLevelWrapper(ScottishCurriculumLevel.EARLY),
+          ScottishCurriculumLevelWrapper(ScottishCurriculumLevel.FIRST),
+          ScottishCurriculumLevelWrapper(ScottishCurriculumLevel.SECOND)),
         curriculumAreaName = ScottishCurriculumAreaName.EXPRESSIVE_ARTS,
         eAndOSetName = Option.empty,
         eAndOSetSectionName = "Participation in performances and presentations",
@@ -72,7 +76,7 @@ class MongoDbEsAndOsReaderDaoTest extends AsyncFlatSpec with MockitoSugar {
           )
         ),
         codes = List("EXA 3-01a"),
-        curriculumLevels = List(ScottishCurriculumLevel.THIRD),
+        curriculumLevels = List(ScottishCurriculumLevelWrapper(ScottishCurriculumLevel.THIRD)),
         curriculumAreaName = ScottishCurriculumAreaName.EXPRESSIVE_ARTS,
         eAndOSetName = Option.empty,
         eAndOSetSectionName = "Participation in performances and presentations",
@@ -89,7 +93,7 @@ class MongoDbEsAndOsReaderDaoTest extends AsyncFlatSpec with MockitoSugar {
           )
         ),
         codes = List("HWB 0-19a"),
-        curriculumLevels = List(ScottishCurriculumLevel.EARLY),
+        curriculumLevels = List(ScottishCurriculumLevelWrapper(ScottishCurriculumLevel.EARLY)),
         curriculumAreaName = ScottishCurriculumAreaName.HEALTH_AND_WELLBEING,
         eAndOSetName = Option.empty,
         eAndOSetSectionName = "Planning for choices and changes",
