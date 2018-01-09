@@ -1,6 +1,7 @@
 package io.sudostream.esandosreader.api.kafka
 
 import akka.actor.ActorSystem
+import akka.event.LoggingAdapter
 import akka.kafka.ConsumerMessage.CommittableMessage
 import akka.kafka.scaladsl.Consumer
 import akka.kafka.scaladsl.Consumer.Control
@@ -9,8 +10,11 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import io.sudostream.esandosreader.config.{ActorSystemWrapper, ConfigHelper}
 import io.sudostream.timetoteach.kafka.serializing.{GetScottishEsAndOsDataRequestDeserializer, ScottishEsAndOsDataSerializer, SystemEventSerializer}
-import io.sudostream.timetoteach.messages.scottish.GetScottishEsAndOsDataRequest
+import io.sudostream.timetoteach.messages.events.SystemEvent
+import io.sudostream.timetoteach.messages.scottish.{GetScottishEsAndOsDataRequest, ScottishEsAndOsData}
+import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.serialization.{ByteArrayDeserializer, ByteArraySerializer}
 
 import scala.concurrent.ExecutionContextExecutor
@@ -19,21 +23,37 @@ class StreamingComponents(configHelper: ConfigHelper, actorSystemWrapper: ActorS
   implicit val system: ActorSystem = actorSystemWrapper.system
   implicit val executor: ExecutionContextExecutor = system.dispatcher
   implicit val materializer: Materializer = actorSystemWrapper.materializer
-  val log = system.log
+  val log: LoggingAdapter = system.log
 
-  lazy val kafkaConsumerBootServers = configHelper.config.getString("akka.kafka.consumer.bootstrapservers")
-  lazy val kafkaProducerBootServers = configHelper.config.getString("akka.kafka.producer.bootstrapservers")
+  lazy val kafkaConsumerBootServers: String = configHelper.config.getString("akka.kafka.consumer.bootstrapservers")
+  lazy val kafkaProducerBootServers: String = configHelper.config.getString("akka.kafka.producer.bootstrapservers")
+  lazy val kafkaSaslJaasUsername: String = configHelper.config.getString("akka.kafka.saslJassUsername")
+  lazy val kafkaSaslJaasPassword: String = configHelper.config.getString("akka.kafka.saslJassPassword")
+  lazy val kafkaSaslJaasConfig: String = s"org.apache.kafka.common.security.scram.ScramLoginModule required " +
+    s"""username="$kafkaSaslJaasUsername" password="$kafkaSaslJaasPassword";"""
 
-  val consumerSettings = ConsumerSettings(system, new ByteArrayDeserializer, new GetScottishEsAndOsDataRequestDeserializer)
-    .withBootstrapServers(kafkaConsumerBootServers)
-    .withGroupId(configHelper.config.getString("akka.kafka.consumer.groupid"))
-    .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest")
+  val consumerSettings: ConsumerSettings[Array[Byte], GetScottishEsAndOsDataRequest] =
+    ConsumerSettings(system, new ByteArrayDeserializer, new GetScottishEsAndOsDataRequestDeserializer)
+      .withBootstrapServers(kafkaConsumerBootServers)
+      .withGroupId(configHelper.config.getString("akka.kafka.consumer.groupid"))
+      .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest")
+      .withProperty(SaslConfigs.SASL_JAAS_CONFIG, kafkaSaslJaasConfig)
+      .withProperty(SaslConfigs.SASL_MECHANISM, "SCRAM-SHA-256")
+      .withProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL")
 
-  val producerSettings = ProducerSettings(system, new ByteArraySerializer, new ScottishEsAndOsDataSerializer)
-    .withBootstrapServers(kafkaProducerBootServers)
+  val producerSettings: ProducerSettings[Array[Byte], ScottishEsAndOsData] =
+    ProducerSettings(system, new ByteArraySerializer, new ScottishEsAndOsDataSerializer)
+      .withBootstrapServers(kafkaProducerBootServers)
+      .withProperty(SaslConfigs.SASL_JAAS_CONFIG, kafkaSaslJaasConfig)
+      .withProperty(SaslConfigs.SASL_MECHANISM, "SCRAM-SHA-256")
+      .withProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL")
 
-  val systemEventProducerSettings = ProducerSettings(system, new ByteArraySerializer, new SystemEventSerializer)
-    .withBootstrapServers(kafkaProducerBootServers)
+  val systemEventProducerSettings: ProducerSettings[Array[Byte], SystemEvent] =
+    ProducerSettings(system, new ByteArraySerializer, new SystemEventSerializer)
+      .withBootstrapServers(kafkaProducerBootServers)
+      .withProperty(SaslConfigs.SASL_JAAS_CONFIG, kafkaSaslJaasConfig)
+      .withProperty(SaslConfigs.SASL_MECHANISM, "SCRAM-SHA-256")
+      .withProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL")
 
   def definedSource:
   Source[CommittableMessage[Array[Byte], GetScottishEsAndOsDataRequest], Control] = {
