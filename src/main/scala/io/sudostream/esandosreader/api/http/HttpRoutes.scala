@@ -14,11 +14,12 @@ import akka.util.Timeout
 import io.sudostream.esandosreader.api.kafka.StreamingComponents
 import io.sudostream.esandosreader.config.ActorSystemWrapper
 import io.sudostream.esandosreader.dao.EsAndOsReaderDao
+import io.sudostream.timetoteach.kafka.serializing.ScottishEsAndOsDataSerializer
 import io.sudostream.timetoteach.messages.events.SystemEvent
 import io.sudostream.timetoteach.messages.systemwide.{SystemEventType, TimeToTeachApplication}
 import org.apache.kafka.clients.producer.ProducerRecord
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
@@ -34,7 +35,7 @@ class HttpRoutes(dao: EsAndOsReaderDao,
 
   implicit val timeout = Timeout(30.seconds)
 
-  val routes: Route = path("api" / "esandos") {
+  val routes = path("api" / "esandos") {
     get {
       val initialRequestReceived = Instant.now().toEpochMilli
       log.debug("Called 'api/esandos' and now getting All the E's and O's from the DAO")
@@ -65,10 +66,12 @@ class HttpRoutes(dao: EsAndOsReaderDao,
 
       onComplete(scottishEsAndOsDataFuture) {
         case Success(esAndOsData) =>
-          complete(HttpEntity(ContentTypes.`application/json`, esAndOsData.toString))
-        case Failure(ex) => failWith(ex)
+          val scottishEsAndOsDataSerializer = new ScottishEsAndOsDataSerializer
+          val esAndOsDataSerialised = scottishEsAndOsDataSerializer.serialize("ignore", esAndOsData)
+          complete(HttpEntity(ContentTypes.`application/octet-stream`, esAndOsDataSerialised))
+        case Failure(ex) =>
+          failWith(ex)
       }
-
     }
   } ~ health
 
