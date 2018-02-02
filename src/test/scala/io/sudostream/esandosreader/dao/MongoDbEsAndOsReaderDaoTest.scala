@@ -3,6 +3,8 @@ package io.sudostream.esandosreader.dao
 import io.sudostream.esandosreader.config.ActorSystemWrapper
 import io.sudostream.timetoteach.messages.scottish._
 import io.sudostream.timetoteach.messages.systemwide.model.ScottishCurriculumLevelWrapper
+import org.bson.BsonArray
+import org.mongodb.scala.bson.BsonString
 import org.scalatest.AsyncFlatSpec
 import org.scalatest.mockito.MockitoSugar
 
@@ -109,5 +111,42 @@ class MongoDbEsAndOsReaderDaoTest extends AsyncFlatSpec with MockitoSugar {
       allExperiencesAndOutcomes = experiencesAndOutcomes
     )
   }
+
+
+  ////
+
+  private def createBsonArrayOfStrings(): BsonArray = {
+    val someStringsInBsonArray: BsonArray = new BsonArray()
+    someStringsInBsonArray.add(BsonString("hello"))
+    someStringsInBsonArray.add(BsonString("there"))
+    someStringsInBsonArray.add(BsonString("world"))
+    someStringsInBsonArray
+  }
+
+  "Converting a defined list of BsonArray strings" should "return a list of the same size" in {
+    val esAndOsDao: MongoDbEsAndOsReaderDao = new MongoDbEsAndOsReaderDao(mongoFindQueries, actorSystemWrapper)
+
+    val stringsInList = esAndOsDao.convertMaybeBsonArrayToListOfStrings(Some(createBsonArrayOfStrings()))
+
+    assert(stringsInList.size === 3)
+  }
+
+  "Converting a BsonString of 'FIRST'" should "convert to the same currciulum level" in {
+    val esAndOsDao: MongoDbEsAndOsReaderDao = new MongoDbEsAndOsReaderDao(mongoFindQueries, actorSystemWrapper)
+
+    val maybeCurriculumLevel = esAndOsDao.convertMaybeBsonStringToScottishCurriculumLevel(Some(BsonString("FIRST")))
+
+    assert(maybeCurriculumLevel.isDefined)
+    assert(maybeCurriculumLevel.get === ScottishCurriculumLevel.FIRST)
+  }
+
+  "Converting a BsonString of 'TYPO'" should "convert to None" in {
+    val esAndOsDao: MongoDbEsAndOsReaderDao = new MongoDbEsAndOsReaderDao(mongoFindQueries, actorSystemWrapper)
+
+    val maybeCurriculumLevel = esAndOsDao.convertMaybeBsonStringToScottishCurriculumLevel(Some(BsonString("TYPO")))
+
+    assert(maybeCurriculumLevel.isEmpty)
+  }
+
 
 }

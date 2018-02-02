@@ -6,4 +6,6 @@ trait MongoDbConnectionWrapper {
 
   def getEsAndOsCollection: MongoCollection[Document]
 
+  def getBenchmarksCollection: MongoCollection[Document]
+
 }

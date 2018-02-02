@@ -40,4 +40,6 @@ class MongoFindQueriesProxyStubWithError extends MongoFindQueriesProxy {
     }
   }
 
+
+  override def findAllBenchmarks: Future[Seq[Document]] = ???
 }

@@ -55,8 +55,7 @@ class StreamingComponents(configHelper: ConfigHelper, actorSystemWrapper: ActorS
       .withProperty(SaslConfigs.SASL_MECHANISM, "SCRAM-SHA-256")
       .withProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL")
 
-  def definedSource:
-  Source[CommittableMessage[Array[Byte], GetScottishEsAndOsDataRequest], Control] = {
+  def definedSource: Source[CommittableMessage[Array[Byte], GetScottishEsAndOsDataRequest], Control] = {
     val source_topic = configHelper.config.getString("esandos.source_topic")
     log.info(s"Source topic is '$source_topic'")
     Consumer.committableSource(consumerSettings, Subscriptions.topics(source_topic))
@@ -69,9 +68,9 @@ class StreamingComponents(configHelper: ConfigHelper, actorSystemWrapper: ActorS
   }
 
   def definedSystemEventsTopic: String = {
-    val sink_topic = configHelper.config.getString("esandos.system_events_topic")
-    log.info(s"Sink topic is '$sink_topic'")
-    sink_topic
+    val system_events_topic = configHelper.config.getString("esandos.system_events_topic")
+    log.info(s"Systems event topic is '$system_events_topic'")
+    system_events_topic
   }
 
 }

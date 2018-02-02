@@ -186,4 +186,64 @@ class MongoDbEsAndOsReaderDao(mongoFindQueriesProxy: MongoFindQueriesProxy,
       )
     }
   }
+
+
+  ////////////////////////
+
+
+  override def extractAllScottishBenchmarks: Future[ScottishBenchmarksData] = {
+    val benchmarksFutureSeqMongoDocuments: Future[Seq[Document]] = mongoFindQueriesProxy.findAllBenchmarks
+    benchmarksFutureSeqMongoDocuments.map { benchmarksInDocSequence =>
+
+      val benchmarksWrappers = {
+        for {
+          benchmarkDoc <- benchmarksInDocSequence
+
+          maybeEandoCodes = benchmarkDoc.get[BsonArray]("eandoCodes")
+          theCodes = convertMaybeBsonArrayToListOfStrings(maybeEandoCodes)
+
+          maybeBsonStringLevel = benchmarkDoc.get[BsonString]("level")
+          maybeLevel = convertMaybeBsonStringToScottishCurriculumLevel(maybeBsonStringLevel)
+          if maybeLevel.isDefined
+
+          maybeBenchmarks = benchmarkDoc.get[BsonArray]("benchmarks")
+          theBenchmarks = convertMaybeBsonArrayToListOfStrings(maybeBenchmarks)
+        } yield ScottishBenchmarksWrapper(theCodes, maybeLevel.get, theBenchmarks)
+      }.toList
+
+      ScottishBenchmarksData(benchmarksWrappers)
+    }
+  }
+
+  def convertMaybeBsonStringToScottishCurriculumLevel(maybeLevel: Option[BsonString]): Option[ScottishCurriculumLevel] = {
+    log.debug(s"maybe level = ${maybeLevel.toString}")
+    maybeLevel match {
+      case Some(level) =>
+        level.getValue match {
+          case "EARLY" => Some(ScottishCurriculumLevel.EARLY)
+          case "FIRST" => Some(ScottishCurriculumLevel.FIRST)
+          case "SECOND" =>Some( ScottishCurriculumLevel.SECOND)
+          case "THIRD" => Some(ScottishCurriculumLevel.THIRD)
+          case "FOURTH" => Some(ScottishCurriculumLevel.FOURTH)
+          case somethingElse =>
+            log.warning(s"Value $somethingElse is not valid currciulum level")
+            None
+        }
+      case None => None
+    }
+  }
+
+  def convertMaybeBsonArrayToListOfStrings(maybeEandoCodes: Option[BsonArray]): List[String] = {
+    log.debug(s"maybeCodes = ${maybeEandoCodes.toString}")
+    if (maybeEandoCodes.isDefined) {
+      val eandoCodesArray = maybeEandoCodes.get
+      log.debug(s"the codes = ${eandoCodesArray.toString}")
+      (for {
+        elem <- eandoCodesArray.getValues
+      } yield elem.asString().toString).toList
+    } else {
+      Nil
+    }
+  }
+
 }

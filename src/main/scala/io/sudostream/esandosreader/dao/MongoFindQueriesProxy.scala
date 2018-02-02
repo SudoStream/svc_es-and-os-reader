@@ -6,4 +6,5 @@ import scala.concurrent.Future
 
 trait MongoFindQueriesProxy {
   def findAllEsAndOs : Future[Seq[Document]]
+  def findAllBenchmarks : Future[Seq[Document]]
 }

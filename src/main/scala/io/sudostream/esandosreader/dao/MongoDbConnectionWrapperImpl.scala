@@ -26,7 +26,8 @@ sealed class MongoDbConnectionWrapperImpl(actorSystemWrapper: ActorSystemWrapper
   private val mongoDbUriString = config.getString("mongodb.connection_uri")
   private val mongoDbUri = new URI(mongoDbUriString)
   private val esAndOsDatabaseName = config.getString("esandos.database_name")
-  private val esAndOsCollectionName = config.getString("esandos.collection_name")
+  private val esAndOsCollectionName = config.getString("esandos.esandos_collection_name")
+  private val benchmarksCollectionName = config.getString("esandos.benchmarks_collection_name")
 
   private val isLocalMongoDb: Boolean = try {
     if (sys.env("LOCAL_MONGO_DB") == "true") true else false
@@ -36,21 +37,24 @@ sealed class MongoDbConnectionWrapperImpl(actorSystemWrapper: ActorSystemWrapper
 
   log.info(s"Running Local = $isLocalMongoDb")
 
-  def getEsAndOsCollection: MongoCollection[Document] = {
-    def createMongoClient: MongoClient = {
-      if (isLocalMongoDb || Main.isMinikubeRun) {
-        buildLocalMongoDbClient
-      } else {
-        log.info(s"connecting to mongo db at '${mongoDbUri.getHost}:${mongoDbUri.getPort}'")
-        System.setProperty("org.mongodb.async.type", "netty")
-        MongoClient(mongoDbUriString)
-      }
-    }
+  lazy val mongoClient = if (isLocalMongoDb || Main.isMinikubeRun) {
+    buildLocalMongoDbClient
+  } else {
+    log.info(s"connecting to mongo db at '${mongoDbUri.getHost}:${mongoDbUri.getPort}'")
+    System.setProperty("org.mongodb.async.type", "netty")
+    MongoClient(mongoDbUriString)
+  }
 
-    val mongoClient = createMongoClient
+  def getEsAndOsCollection: MongoCollection[Document] = {
     val database: MongoDatabase = mongoClient.getDatabase(esAndOsDatabaseName)
     database.getCollection(esAndOsCollectionName)
   }
+
+  def getBenchmarksCollection: MongoCollection[Document] = {
+    val database: MongoDatabase = mongoClient.getDatabase(esAndOsDatabaseName)
+    database.getCollection(benchmarksCollectionName)
+  }
+
 
   private def buildLocalMongoDbClient = {
     val mongoKeystorePassword = try {
