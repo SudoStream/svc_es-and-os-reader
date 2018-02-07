@@ -2,7 +2,6 @@ package io.sudostream.esandosreader.dao
 
 import io.sudostream.esandosreader.config.ActorSystemWrapper
 import io.sudostream.timetoteach.messages.scottish._
-import io.sudostream.timetoteach.messages.systemwide.model.ScottishCurriculumLevelWrapper
 import org.bson.BsonArray
 import org.mongodb.scala.bson.BsonString
 import org.scalatest.AsyncFlatSpec
@@ -50,56 +49,62 @@ class MongoDbEsAndOsReaderDaoTest extends AsyncFlatSpec with MockitoSugar {
 
 
   def stubExtractScottishEsAndOsData: ScottishEsAndOsData = {
-    val experiencesAndOutcomes: List[ScottishEsAndOsMetadata] = List(
-      ScottishEsAndOsMetadata(
-        experienceAndOutcome = List(
-          ScottishExperienceAndOutcome(
-            sentence = "I have experienced the energy and excitement of presenting/performing for " +
-              "audiences and being part of an audience for other people’s presentations/performances.",
-            bulletPoints = List()
+    val experiencesAndOutcomes: List[ScottishEsAndOsBySubSection] = List(
+      ScottishEsAndOsBySubSection(
+        allExperienceAndOutcomesAtTheSubSectionLevel = List(
+          SingleScottishExperienceAndOutcome(
+            code = "EXA 0-01a",
+            eAndOLines = List(
+              ScottishExperienceAndOutcomeLine(sentence = "I have experienced the energy and excitement of presenting/performing for " +
+                "audiences and being part of an audience for other people’s presentations/performances.",
+                bulletPoints = List()
+              )
+            )
           )
         ),
-        codes = List("EXA 0-01a", "EXA 1-01a", "EXA 2-01a"),
-        curriculumLevels = List(
-          ScottishCurriculumLevelWrapper(ScottishCurriculumLevel.EARLY),
-          ScottishCurriculumLevelWrapper(ScottishCurriculumLevel.FIRST),
-          ScottishCurriculumLevelWrapper(ScottishCurriculumLevel.SECOND)),
+        scottishCurriculumLevel = ScottishCurriculumLevel.EARLY,
+        associatedBenchmarks = Nil,
         curriculumAreaName = ScottishCurriculumAreaName.EXPRESSIVE_ARTS,
-        eAndOSetName = Option.empty,
         eAndOSetSectionName = "Participation in performances and presentations",
         eAndOSetSubSectionName = Option.empty,
         eAndOSetSubSectionAuxiliaryText = Option.empty,
         responsibilityOfAllPractitioners = true
       ),
-      ScottishEsAndOsMetadata(
-        experienceAndOutcome = List(
-          ScottishExperienceAndOutcome(
-            sentence = "I have used the skills I have developed in the expressive arts to contribute to a " +
-              "public presentation/performance.",
-            bulletPoints = List()
+      ScottishEsAndOsBySubSection(
+        allExperienceAndOutcomesAtTheSubSectionLevel = List(
+          SingleScottishExperienceAndOutcome(
+            code = "EXA 3-01a",
+            eAndOLines = List(
+              ScottishExperienceAndOutcomeLine(
+                sentence = "I have used the skills I have developed in the expressive arts to contribute to a " +
+                  "public presentation/performance.",
+                bulletPoints = List())
+            )
           )
         ),
-        codes = List("EXA 3-01a"),
-        curriculumLevels = List(ScottishCurriculumLevelWrapper(ScottishCurriculumLevel.THIRD)),
+        scottishCurriculumLevel = ScottishCurriculumLevel.THIRD,
+        associatedBenchmarks = Nil,
         curriculumAreaName = ScottishCurriculumAreaName.EXPRESSIVE_ARTS,
-        eAndOSetName = Option.empty,
         eAndOSetSectionName = "Participation in performances and presentations",
         eAndOSetSubSectionName = Option.empty,
         eAndOSetSubSectionAuxiliaryText = Option.empty,
         responsibilityOfAllPractitioners = true
       ),
-      ScottishEsAndOsMetadata(
-        experienceAndOutcome = List(
-          ScottishExperienceAndOutcome(
-            sentence = "In everyday activity and play, I explore and make choices to develop my learning and interests. " +
-              "I am encouraged to use and share my experiences.",
-            bulletPoints = List()
+      ScottishEsAndOsBySubSection(
+        allExperienceAndOutcomesAtTheSubSectionLevel = List(
+          SingleScottishExperienceAndOutcome(
+            code = "HWB 0-19a",
+            eAndOLines = List(
+              ScottishExperienceAndOutcomeLine(
+                sentence = "In everyday activity and play, I explore and make choices to develop my learning and interests. " +
+                  "I am encouraged to use and share my experiences.",
+                bulletPoints = List())
+            )
           )
         ),
-        codes = List("HWB 0-19a"),
-        curriculumLevels = List(ScottishCurriculumLevelWrapper(ScottishCurriculumLevel.EARLY)),
+        scottishCurriculumLevel = ScottishCurriculumLevel.EARLY,
+        associatedBenchmarks = Nil,
         curriculumAreaName = ScottishCurriculumAreaName.HEALTH_AND_WELLBEING,
-        eAndOSetName = Option.empty,
         eAndOSetSectionName = "Planning for choices and changes",
         eAndOSetSubSectionName = Option.empty,
         eAndOSetSubSectionAuxiliaryText = Option.empty,

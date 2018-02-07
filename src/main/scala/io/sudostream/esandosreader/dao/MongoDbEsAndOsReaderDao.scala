@@ -5,7 +5,6 @@ import akka.event.LoggingAdapter
 import akka.stream.Materializer
 import io.sudostream.esandosreader.config.ActorSystemWrapper
 import io.sudostream.timetoteach.messages.scottish._
-import io.sudostream.timetoteach.messages.systemwide.model.ScottishCurriculumLevelWrapper
 import org.mongodb.scala.Document
 import org.mongodb.scala.bson.{BsonArray, BsonString}
 
@@ -25,10 +24,10 @@ class MongoDbEsAndOsReaderDao(mongoFindQueriesProxy: MongoFindQueriesProxy,
     val esAndOsFutureSeqMongoDocuments: Future[Seq[Document]] = mongoFindQueriesProxy.findAllEsAndOs
     esAndOsFutureSeqMongoDocuments map {
       esAndOs =>
-        val seqOfScottishEsAndOsMetadata: Seq[Try[ScottishEsAndOsMetadata]] =
+        val seqOfScottishEsAndOsMetadata: Seq[Try[ScottishEsAndOsBySubSection]] =
           for {
-            singleEAndODoc <- esAndOs
-            singleScottishEAndOMetadata: Try[ScottishEsAndOsMetadata] = createScottishEsAndOsMetadata(singleEAndODoc)
+            singleEAndODocAtSubSectionLevel <- esAndOs
+            singleScottishEAndOMetadata: Try[ScottishEsAndOsBySubSection] = createScottishEsAndOsBySubSection(singleEAndODocAtSubSectionLevel)
           } yield singleScottishEAndOMetadata
 
         val failures = seqOfScottishEsAndOsMetadata.filter(singleTry => singleTry.isFailure)
@@ -44,83 +43,67 @@ class MongoDbEsAndOsReaderDao(mongoFindQueriesProxy: MongoFindQueriesProxy,
     }
   }
 
-  def createScottishEsAndOsMetadata(esAndOsDocument: Document): Try[ScottishEsAndOsMetadata] = {
+  def convertToSentencesAndBulletPoints(sentencesAsBsonArray: BsonArray): List[ScottishExperienceAndOutcomeLine] = {
+    {
+      for {
+        eAndOElem <- sentencesAsBsonArray
+        eAndO = eAndOElem.asDocument()
+        sentence = eAndO.getString("sentence").getValue
+        theEAndOBulletPoints: BsonArray = eAndO.getArray("bulletPoints")
+      } yield ScottishExperienceAndOutcomeLine(
+        sentence,
+        theEAndOBulletPoints.toArray.toList.map(_.toString)
+      )
+    }.toList
+  }
+
+
+  def convertBenchmarksToList(benchmarks: BsonArray): List[String] = {
+    {
+      for {
+        benchmarkAsValue <- benchmarks
+      } yield benchmarkAsValue.asString().getValue
+    }.toList
+  }
+
+  def createScottishEsAndOsBySubSection(esAndOsDocument: Document): Try[ScottishEsAndOsBySubSection] = {
     Try {
-      val experienceAndOutcomesBsonArray = esAndOsDocument.get[BsonArray]("experienceAndOutcome")
+      val experienceAndOutcomesAtSubsectionLevelBsonArray = esAndOsDocument.get[BsonArray]("allExperienceAndOutcomesAtTheSubSectionLevel")
         .getOrElse(throw new RuntimeException("Expected an array here " +
           "for 'experienceAndOutcome' in ${esAndOsDocument.toString()"))
 
-      val experienceAndOutcomes = experienceAndOutcomesBsonArray.getValues
+      val experienceAndOutcomesAtSubsectionLevelBsonValues = experienceAndOutcomesAtSubsectionLevelBsonArray.getValues
 
-      val eAndOSentencesAndBulletPoints: Seq[(String, List[String])] =
+      val allEsAndOsAtSubsectionLevel = {
         for {
-          eAndOElem <- experienceAndOutcomes
-          eAndO = eAndOElem.asDocument()
-
-          theEAndO: BsonString = eAndO.getString("sentence") match {
-            case someString: BsonString => someString
-            case _ =>
-              val errorMsg = s"Invalid sentence format which should be string" +
-                s" which came from ${esAndOsDocument.toString()}"
-              log.error(errorMsg)
-              throw new RuntimeException(errorMsg)
-          }
-
-          theEAndOBulletPoints: BsonArray = eAndO("bulletPoints") match {
-            case someBsonArray: BsonArray => someBsonArray
-            case _ =>
-              val errorMsg = s"Invalid bullet points format which should be list of string" +
-                s" which came from ${esAndOsDocument.toString()}"
-              log.error(errorMsg)
-              throw new RuntimeException(errorMsg)
-          }
-
-        } yield (theEAndO.toString, theEAndOBulletPoints.toArray.toList.map(_.toString))
-
-      val scottishExperienceAndOutcomesPrepped =
-        for {entry <- eAndOSentencesAndBulletPoints
-             theSentence = entry._1
-             theBulletPoints = entry._2
-        } yield ScottishExperienceAndOutcome(
-          sentence = theSentence,
-          bulletPoints = theBulletPoints
+          singleEAndOValue <- experienceAndOutcomesAtSubsectionLevelBsonValues
+          singleEAndODoc = singleEAndOValue.asDocument()
+          eAndOCode = singleEAndODoc.getString("code").getValue
+          sentencesAsBsonArray = singleEAndODoc.getArray("sentences")
+          lines: List[ScottishExperienceAndOutcomeLine] = convertToSentencesAndBulletPoints(sentencesAsBsonArray)
+        } yield SingleScottishExperienceAndOutcome(
+          code = eAndOCode,
+          eAndOLines = lines
         )
+      }.toList
 
-      val theCodesBsonArray = esAndOsDocument.get[BsonArray]("codes")
-        .getOrElse(throw new RuntimeException("Expected an array here " +
-          "for 'codes' in ${esAndOsDocument.toString()"))
+      val associatedBenchmarks = {
+        {
+          for {
+            benchmarks <- esAndOsDocument.get[BsonArray]("associatedBenchmarks")
+            benchmark = convertBenchmarksToList(benchmarks)
+          } yield benchmark
+        }.toList
+      }.flatten
 
-      val theCodes: List[String] =
-        (for {
-          elem <- theCodesBsonArray.getValues
-        } yield elem.asString().toString).toList
-
-
-      val theCurriculumLevelsAsBsonArray = esAndOsDocument.get[BsonArray]("curriculumLevels")
-        .getOrElse(throw new RuntimeException("Expected an array here " +
-          "for 'codes' in ${esAndOsDocument.toString()"))
-      val theCurriculumLevelsAsStrings: List[String] =
-        (for {
-          elem <- theCurriculumLevelsAsBsonArray.getValues
-          elemString = elem.asString()
-        } yield elemString.getValue).toList
-
-
-      val theCurriculumLevels =
-        for {
-          elem <- theCurriculumLevelsAsStrings
-          level = if ("EARLY" == elem) ScottishCurriculumLevel.EARLY
-          else if ("FIRST" == elem) ScottishCurriculumLevel.FIRST
-          else if ("SECOND" == elem) ScottishCurriculumLevel.SECOND
-          else if ("THIRD" == elem) ScottishCurriculumLevel.THIRD
-          else if ("FOURTH" == elem) ScottishCurriculumLevel.FOURTH
-          else {
-            val errorMsg = s"Didn't recognise Scottish Curriculum Level '$elem'" +
-              s" which came from ${esAndOsDocument.toString()}"
-            log.error(errorMsg)
-            throw new RuntimeException(errorMsg)
-          }
-        } yield ScottishCurriculumLevelWrapper(level)
+      val theCurriculumLevelAsString = esAndOsDocument.get[BsonString]("curriculumLevel").get.asString().getValue
+      val theCurriculumLevel = theCurriculumLevelAsString match {
+        case "EARLY" => ScottishCurriculumLevel.EARLY
+        case "FIRST" => ScottishCurriculumLevel.FIRST
+        case "SECOND" => ScottishCurriculumLevel.SECOND
+        case "THIRD" => ScottishCurriculumLevel.THIRD
+        case "FOURTH" => ScottishCurriculumLevel.FOURTH
+      }
 
       val theCurriculumAreaNameAsString = esAndOsDocument.getString("curriculumAreaName")
       val theCurriculumAreaName: ScottishCurriculumAreaName =
@@ -140,17 +123,6 @@ class MongoDbEsAndOsReaderDao(mongoFindQueriesProxy: MongoFindQueriesProxy,
           log.error(errorMsg)
           throw new RuntimeException(errorMsg)
         }
-
-      val theEAndOSetNameAsString = esAndOsDocument.getString("eAndOSetName")
-      val theEAndOSetName: Option[ScottishEAndOSetName] =
-        if ("LANGUAGES__CLASSICAL_LANGUAGES" == theEAndOSetNameAsString) Some(ScottishEAndOSetName.LANGUAGES__CLASSICAL_LANGUAGES)
-        else if ("LANGUAGES__GAELIC_LEARNERS" == theEAndOSetNameAsString) Some(ScottishEAndOSetName.LANGUAGES__GAELIC_LEARNERS)
-        else if ("LANGUAGES__LITERACY_AND_ENGLISH" == theEAndOSetNameAsString) Some(ScottishEAndOSetName.LANGUAGES__LITERACY_AND_ENGLISH)
-        else if ("LANGUAGES__LITERACY_AND_GAIDHLIG" == theEAndOSetNameAsString) Some(ScottishEAndOSetName.LANGUAGES__LITERACY_AND_GAIDHLIG)
-        else if ("LANGUAGES__MODERN_LANGUAGES" == theEAndOSetNameAsString) Some(ScottishEAndOSetName.LANGUAGES__MODERN_LANGUAGES)
-        else if ("RELIGIOUS_AND_MORAL_EDUCATION" == theEAndOSetNameAsString) Some(ScottishEAndOSetName.RELIGIOUS_AND_MORAL_EDUCATION)
-        else if ("RELIGIOUS_EDUCATION_IN_ROMAN_CATHOLIC_SCHOOLS" == theEAndOSetNameAsString) Some(ScottishEAndOSetName.RELIGIOUS_EDUCATION_IN_ROMAN_CATHOLIC_SCHOOLS)
-        else Option.empty
 
       val theEAndOSetSectionName: String = esAndOsDocument.getString("eAndOSetSectionName")
       val theEAndOSetSubSectionName = esAndOsDocument.getString("eAndOSetSubSectionName") match {
@@ -173,12 +145,11 @@ class MongoDbEsAndOsReaderDao(mongoFindQueriesProxy: MongoFindQueriesProxy,
 
       val theResponsibilityOfAllPractitioners: Boolean = esAndOsDocument.getBoolean("responsibilityOfAllPractitioners")
 
-      ScottishEsAndOsMetadata(
-        experienceAndOutcome = scottishExperienceAndOutcomesPrepped.toList,
-        codes = theCodes,
-        curriculumLevels = theCurriculumLevels,
+      ScottishEsAndOsBySubSection(
+        allExperienceAndOutcomesAtTheSubSectionLevel = allEsAndOsAtSubsectionLevel,
+        scottishCurriculumLevel = theCurriculumLevel,
+        associatedBenchmarks = associatedBenchmarks,
         curriculumAreaName = theCurriculumAreaName,
-        eAndOSetName = theEAndOSetName,
         eAndOSetSectionName = theEAndOSetSectionName,
         eAndOSetSubSectionName = theEAndOSetSubSectionName,
         eAndOSetSubSectionAuxiliaryText = theEAndOSetSubSectionAuxiliaryText,
@@ -222,7 +193,7 @@ class MongoDbEsAndOsReaderDao(mongoFindQueriesProxy: MongoFindQueriesProxy,
         level.getValue match {
           case "EARLY" => Some(ScottishCurriculumLevel.EARLY)
           case "FIRST" => Some(ScottishCurriculumLevel.FIRST)
-          case "SECOND" =>Some( ScottishCurriculumLevel.SECOND)
+          case "SECOND" => Some(ScottishCurriculumLevel.SECOND)
           case "THIRD" => Some(ScottishCurriculumLevel.THIRD)
           case "FOURTH" => Some(ScottishCurriculumLevel.FOURTH)
           case somethingElse =>
