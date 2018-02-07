@@ -49,14 +49,22 @@ class MongoDbEsAndOsReaderDao(mongoFindQueriesProxy: MongoFindQueriesProxy,
         eAndOElem <- sentencesAsBsonArray
         eAndO = eAndOElem.asDocument()
         sentence = eAndO.getString("sentence").getValue
-        theEAndOBulletPoints: BsonArray = eAndO.getArray("bulletPoints")
+        theEAndOBulletPointsAsArray: BsonArray = eAndO.getArray("bulletPoints")
+        theEAndOBulletPoints = convertBulletsToList(theEAndOBulletPointsAsArray)
       } yield ScottishExperienceAndOutcomeLine(
         sentence,
-        theEAndOBulletPoints.toArray.toList.map(_.toString)
+        theEAndOBulletPoints
       )
     }.toList
   }
 
+  def convertBulletsToList(bullets: BsonArray): List[String] = {
+    {
+      for {
+        bulletAsValue <- bullets
+      } yield bulletAsValue.asString().getValue
+    }.toList
+  }
 
   def convertBenchmarksToList(benchmarks: BsonArray): List[String] = {
     {
