@@ -13,14 +13,16 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.Try
 
 class MongoDbEsAndOsReaderDao(mongoFindQueriesProxy: MongoFindQueriesProxy,
-                              actorSystemWrapper: ActorSystemWrapper) extends EsAndOsReaderDao {
+                              actorSystemWrapper: ActorSystemWrapper) extends EsAndOsReaderDao
+{
   implicit val system: ActorSystem = actorSystemWrapper.system
   implicit val executor: ExecutionContextExecutor = system.dispatcher
   implicit val materializer: Materializer = actorSystemWrapper.materializer
   val log: LoggingAdapter = system.log
 
 
-  override def extractAllScottishEsAndOs: Future[ScottishEsAndOsData] = {
+  override def extractAllScottishEsAndOs: Future[ScottishEsAndOsData] =
+  {
     val esAndOsFutureSeqMongoDocuments: Future[Seq[Document]] = mongoFindQueriesProxy.findAllEsAndOs
     esAndOsFutureSeqMongoDocuments map {
       esAndOs =>
@@ -43,7 +45,8 @@ class MongoDbEsAndOsReaderDao(mongoFindQueriesProxy: MongoFindQueriesProxy,
     }
   }
 
-  def convertToSentencesAndBulletPoints(sentencesAsBsonArray: BsonArray): List[ScottishExperienceAndOutcomeLine] = {
+  def convertToSentencesAndBulletPoints(sentencesAsBsonArray: BsonArray): List[ScottishExperienceAndOutcomeLine] =
+  {
     {
       for {
         eAndOElem <- sentencesAsBsonArray
@@ -58,7 +61,8 @@ class MongoDbEsAndOsReaderDao(mongoFindQueriesProxy: MongoFindQueriesProxy,
     }.toList
   }
 
-  def convertBulletsToList(bullets: BsonArray): List[String] = {
+  def convertBulletsToList(bullets: BsonArray): List[String] =
+  {
     {
       for {
         bulletAsValue <- bullets
@@ -66,7 +70,8 @@ class MongoDbEsAndOsReaderDao(mongoFindQueriesProxy: MongoFindQueriesProxy,
     }.toList
   }
 
-  def convertBenchmarksToList(benchmarks: BsonArray): List[String] = {
+  def convertBenchmarksToList(benchmarks: BsonArray): List[String] =
+  {
     {
       for {
         benchmarkAsValue <- benchmarks
@@ -74,7 +79,8 @@ class MongoDbEsAndOsReaderDao(mongoFindQueriesProxy: MongoFindQueriesProxy,
     }.toList
   }
 
-  def createScottishEsAndOsBySubSection(esAndOsDocument: Document): Try[ScottishEsAndOsBySubSection] = {
+  def createScottishEsAndOsBySubSection(esAndOsDocument: Document): Try[ScottishEsAndOsBySubSection] =
+  {
     Try {
       val experienceAndOutcomesAtSubsectionLevelBsonArray = esAndOsDocument.get[BsonArray]("allExperienceAndOutcomesAtTheSubSectionLevel")
         .getOrElse(throw new RuntimeException("Expected an array here " +
@@ -114,22 +120,36 @@ class MongoDbEsAndOsReaderDao(mongoFindQueriesProxy: MongoFindQueriesProxy,
       }
 
       val theCurriculumAreaNameAsString = esAndOsDocument.getString("curriculumAreaName")
-      val theCurriculumAreaName: ScottishCurriculumAreaName =
-        if ("Expressive Arts" == theCurriculumAreaNameAsString) ScottishCurriculumAreaName.EXPRESSIVE_ARTS
-        else if ("Health And Wellbeing" == theCurriculumAreaNameAsString) ScottishCurriculumAreaName.HEALTH_AND_WELLBEING
-        else if ("Languages" == theCurriculumAreaNameAsString) ScottishCurriculumAreaName.LANGUAGES
-        else if ("Mathematics" == theCurriculumAreaNameAsString) ScottishCurriculumAreaName.MATHEMATICS
-        else if ("Religion And Moral Education" == theCurriculumAreaNameAsString) ScottishCurriculumAreaName.RELIGION_AND_MORAL_EDUCATION
-        else if ("Sciences" == theCurriculumAreaNameAsString) ScottishCurriculumAreaName.SCIENCES
-        else if ("Social Studies" == theCurriculumAreaNameAsString) ScottishCurriculumAreaName.SOCIAL_STUDIES
-        else if ("Technologies" == theCurriculumAreaNameAsString) ScottishCurriculumAreaName.TECHNOLOGIES
-        else if ("Literacy" == theCurriculumAreaNameAsString) ScottishCurriculumAreaName.LITERACY
-        else if ("Numeracy" == theCurriculumAreaNameAsString) ScottishCurriculumAreaName.NUMERACY
-        else {
-          val errorMsg = s"Didn't recognise Scottish Curriculum Area Name '$theCurriculumAreaNameAsString'" +
-            s" which came from ${esAndOsDocument.toString()}"
-          log.error(errorMsg)
-          throw new RuntimeException(errorMsg)
+      val theCurriculumAreaName: ScottishCurriculumPlanningArea =
+        theCurriculumAreaNameAsString.toUpperCase match {
+          case "EXPRESSIVE_ARTS" => ScottishCurriculumPlanningArea.EXPRESSIVE_ARTS
+          case "EXPRESSIVE_ARTS__ART" => ScottishCurriculumPlanningArea.EXPRESSIVE_ARTS__ART
+          case "EXPRESSIVE_ARTS__DRAMA" => ScottishCurriculumPlanningArea.EXPRESSIVE_ARTS__DRAMA
+          case "EXPRESSIVE_ARTS__MUSIC" => ScottishCurriculumPlanningArea.EXPRESSIVE_ARTS__MUSIC
+          case "HEALTH_AND_WELLBEING" => ScottishCurriculumPlanningArea.HEALTH_AND_WELLBEING
+          case "HEALTH_AND_WELLBEING__PHYSICAL_EDUCATION" => ScottishCurriculumPlanningArea.HEALTH_AND_WELLBEING__PHYSICAL_EDUCATION
+          case "LITERACY__WRITING" => ScottishCurriculumPlanningArea.LITERACY__WRITING
+          case "LITERACY__READING" => ScottishCurriculumPlanningArea.LITERACY__READING
+          case "LITERACY__CLASSICAL_LANGUAGES" => ScottishCurriculumPlanningArea.LITERACY__CLASSICAL_LANGUAGES
+          case "LITERACY__GAELIC_LEARNERS" => ScottishCurriculumPlanningArea.LITERACY__GAELIC_LEARNERS
+          case "LITERACY__LITERACY_AND_ENGLISH" => ScottishCurriculumPlanningArea.LITERACY__LITERACY_AND_ENGLISH
+          case "LITERACY__LITERACY_AND_GAIDLIG" => ScottishCurriculumPlanningArea.LITERACY__LITERACY_AND_GAIDLIG
+          case "LITERACY__MODERN_LANGUAGES" => ScottishCurriculumPlanningArea.LITERACY__MODERN_LANGUAGES
+          case "MATHEMATICS" => ScottishCurriculumPlanningArea.MATHEMATICS
+          case "RME__STANDARD" => ScottishCurriculumPlanningArea.RME__STANDARD
+          case "RME__CATHOLIC" => ScottishCurriculumPlanningArea.RME__CATHOLIC
+          case "SCIENCE" => ScottishCurriculumPlanningArea.SCIENCE
+          case "SOCIAL_STUDIES" => ScottishCurriculumPlanningArea.SOCIAL_STUDIES
+          case "TECHNOLOGIES" => ScottishCurriculumPlanningArea.TECHNOLOGIES
+          case "TOPIC" => ScottishCurriculumPlanningArea.TOPIC
+          case "NONE" => ScottishCurriculumPlanningArea.NONE
+          case _ =>
+            val errorMsg = s"Didn't recognise Scottish Curriculum Area Name '$theCurriculumAreaNameAsString'" +
+              s" which came from ${
+                esAndOsDocument.toString()
+              }"
+            log.error(errorMsg)
+            throw new RuntimeException(errorMsg)
         }
 
       val theEAndOSetSectionName: String = esAndOsDocument.getString("eAndOSetSectionName")
@@ -170,32 +190,37 @@ class MongoDbEsAndOsReaderDao(mongoFindQueriesProxy: MongoFindQueriesProxy,
   ////////////////////////
 
 
-  override def extractAllScottishBenchmarks: Future[ScottishBenchmarksData] = {
+  override def extractAllScottishBenchmarks: Future[ScottishBenchmarksData] =
+  {
     val benchmarksFutureSeqMongoDocuments: Future[Seq[Document]] = mongoFindQueriesProxy.findAllBenchmarks
-    benchmarksFutureSeqMongoDocuments.map { benchmarksInDocSequence =>
+    benchmarksFutureSeqMongoDocuments.map {
+      benchmarksInDocSequence =>
 
-      val benchmarksWrappers = {
-        for {
-          benchmarkDoc <- benchmarksInDocSequence
+        val benchmarksWrappers = {
+          for {
+            benchmarkDoc <- benchmarksInDocSequence
 
-          maybeEandoCodes = benchmarkDoc.get[BsonArray]("eandoCodes")
-          theCodes = convertMaybeBsonArrayToListOfStrings(maybeEandoCodes)
+            maybeEandoCodes = benchmarkDoc.get[BsonArray]("eandoCodes")
+            theCodes = convertMaybeBsonArrayToListOfStrings(maybeEandoCodes)
 
-          maybeBsonStringLevel = benchmarkDoc.get[BsonString]("level")
-          maybeLevel = convertMaybeBsonStringToScottishCurriculumLevel(maybeBsonStringLevel)
-          if maybeLevel.isDefined
+            maybeBsonStringLevel = benchmarkDoc.get[BsonString]("level")
+            maybeLevel = convertMaybeBsonStringToScottishCurriculumLevel(maybeBsonStringLevel)
+            if maybeLevel.isDefined
 
-          maybeBenchmarks = benchmarkDoc.get[BsonArray]("benchmarks")
-          theBenchmarks = convertMaybeBsonArrayToListOfStrings(maybeBenchmarks)
-        } yield ScottishBenchmarksWrapper(theCodes, maybeLevel.get, theBenchmarks)
-      }.toList
+            maybeBenchmarks = benchmarkDoc.get[BsonArray]("benchmarks")
+            theBenchmarks = convertMaybeBsonArrayToListOfStrings(maybeBenchmarks)
+          } yield ScottishBenchmarksWrapper(theCodes, maybeLevel.get, theBenchmarks)
+        }.toList
 
-      ScottishBenchmarksData(benchmarksWrappers)
+        ScottishBenchmarksData(benchmarksWrappers)
     }
   }
 
-  def convertMaybeBsonStringToScottishCurriculumLevel(maybeLevel: Option[BsonString]): Option[ScottishCurriculumLevel] = {
-    log.debug(s"maybe level = ${maybeLevel.toString}")
+  def convertMaybeBsonStringToScottishCurriculumLevel(maybeLevel: Option[BsonString]): Option[ScottishCurriculumLevel] =
+  {
+    log.debug(s"maybe level = ${
+      maybeLevel.toString
+    }")
     maybeLevel match {
       case Some(level) =>
         level.getValue match {
@@ -212,11 +237,16 @@ class MongoDbEsAndOsReaderDao(mongoFindQueriesProxy: MongoFindQueriesProxy,
     }
   }
 
-  def convertMaybeBsonArrayToListOfStrings(maybeEandoCodes: Option[BsonArray]): List[String] = {
-    log.debug(s"maybeCodes = ${maybeEandoCodes.toString}")
+  def convertMaybeBsonArrayToListOfStrings(maybeEandoCodes: Option[BsonArray]): List[String] =
+  {
+    log.debug(s"maybeCodes = ${
+      maybeEandoCodes.toString
+    }")
     if (maybeEandoCodes.isDefined) {
       val eandoCodesArray = maybeEandoCodes.get
-      log.debug(s"the codes = ${eandoCodesArray.toString}")
+      log.debug(s"the codes = ${
+        eandoCodesArray.toString
+      }")
       (for {
         elem <- eandoCodesArray.getValues
       } yield elem.asString().toString).toList
