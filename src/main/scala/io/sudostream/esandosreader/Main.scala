@@ -25,7 +25,7 @@ object Main extends App with MiniKubeHealper {
   implicit val executor = theActorSystem.dispatcher
   implicit val materializer = actorSystemWrapper.materializer
 
-  kafkaFlow.setUpKafkaFlow()
+//  kafkaFlow.setUpKafkaFlow()
   setupHttp()
 
   private def setupHttp() {
