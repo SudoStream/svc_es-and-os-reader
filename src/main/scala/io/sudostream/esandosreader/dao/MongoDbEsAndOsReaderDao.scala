@@ -37,6 +37,7 @@ class MongoDbEsAndOsReaderDao(mongoFindQueriesProxy: MongoFindQueriesProxy,
         if (failures.nonEmpty) {
           val errorMsg = "Failed to correctly parse Es And Os from database"
           log.error(errorMsg)
+          log.error(failures.toList.mkString("\n"))
           return Future.failed(new RuntimeException(errorMsg))
         } else {
           val esAndOs = seqOfScottishEsAndOsMetadata map { esAndOsTry => esAndOsTry.get }
