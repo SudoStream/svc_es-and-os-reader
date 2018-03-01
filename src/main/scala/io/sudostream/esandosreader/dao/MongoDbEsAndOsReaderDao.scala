@@ -132,6 +132,7 @@ class MongoDbEsAndOsReaderDao(mongoFindQueriesProxy: MongoFindQueriesProxy,
           case "HEALTH_AND_WELLBEING__PHYSICAL_EDUCATION" => ScottishCurriculumPlanningArea.HEALTH_AND_WELLBEING__PHYSICAL_EDUCATION
           case "LITERACY__WRITING" => ScottishCurriculumPlanningArea.LITERACY__WRITING
           case "LITERACY__READING" => ScottishCurriculumPlanningArea.LITERACY__READING
+          case "LITERACY__LISTENING_AND_TALKING" => ScottishCurriculumPlanningArea.LITERACY__LISTENING_AND_TALKING
           case "LITERACY__CLASSICAL_LANGUAGES" => ScottishCurriculumPlanningArea.LITERACY__CLASSICAL_LANGUAGES
           case "LITERACY__GAELIC_LEARNERS" => ScottishCurriculumPlanningArea.LITERACY__GAELIC_LEARNERS
           case "LITERACY__LITERACY_AND_ENGLISH" => ScottishCurriculumPlanningArea.LITERACY__LITERACY_AND_ENGLISH
